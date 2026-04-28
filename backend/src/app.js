@@ -4,6 +4,8 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { pool } = require('./config/db');
 const { seedAdmin } = require('./config/seed');
+const fs = require('fs');
+const path = require('path');
 
 const authRoutes     = require('./routes/auth.routes');
 const recursosRoutes = require('./routes/recursos.routes');
@@ -50,6 +52,9 @@ async function waitForDB(retries = 10, delay = 3000) {
   try {
     await waitForDB();
     console.log('Conectado a PostgreSQL');
+    const initSQL = fs.readFileSync(path.join(__dirname, 'config/init.sql'), 'utf8');
+    await pool.query(initSQL);
+    console.log('Tablas inicializadas');
     await seedAdmin();
     app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
   } catch (err) {
