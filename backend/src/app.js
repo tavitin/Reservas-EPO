@@ -15,6 +15,9 @@ const usuariosRoutes = require('./routes/usuarios.routes');
 
 const app = express();
 
+// Confiar en el proxy de Railway (necesario para que express-rate-limit identifique IPs correctamente)
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
 app.use(express.json({ limit: '50kb' }));
