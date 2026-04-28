@@ -70,11 +70,11 @@ exports.cancel = async (req, res) => {
 
     const { rows } = await pool.query(
       `UPDATE reservas SET estado = 'cancelada'
-       WHERE id = $1${where} AND estado = 'confirmada'
+       WHERE id = $1${where} AND estado = 'confirmada' AND fecha_fin > NOW()
        RETURNING *`,
       params
     );
-    if (!rows[0]) return res.status(404).json({ error: 'Reserva no encontrada o sin permiso' });
+    if (!rows[0]) return res.status(404).json({ error: 'Reserva no encontrada, sin permiso o ya finalizada' });
     res.json(rows[0]);
   } catch {
     res.status(500).json({ error: 'Error interno' });

@@ -30,6 +30,8 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { nombre, tipo, descripcion } = req.body;
+    if (!nombre || !tipo)
+      return res.status(400).json({ error: 'Nombre y tipo son requeridos' });
     const { rows } = await pool.query(
       'UPDATE recursos SET nombre=$1, tipo=$2, descripcion=$3 WHERE id=$4 AND activo=true RETURNING *',
       [nombre, tipo, descripcion || null, req.params.id]

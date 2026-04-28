@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { pool } = require('./config/db');
 const { seedAdmin } = require('./config/seed');
@@ -14,9 +15,19 @@ const usuariosRoutes = require('./routes/usuarios.routes');
 
 const app = express();
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
-app.use(express.json());
+app.use(helmet());
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
+app.use(express.json({ limit: '50kb' }));
 
+// Rate limiting global
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiting estricto para autenticación y acciones sensibles
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -25,7 +36,17 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const sensitiveLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Demasiadas solicitudes. Intenta de nuevo en 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(globalLimiter);
 app.use('/api/auth/login', loginLimiter);
+app.use('/api/usuarios', sensitiveLimiter);
 app.use('/api/auth',     authRoutes);
 app.use('/api/recursos', recursosRoutes);
 app.use('/api/reservas', reservasRoutes);

@@ -19,8 +19,8 @@ exports.create = async (req, res) => {
       return res.status(400).json({ error: 'Nombre, email y contraseña son requeridos' });
     if (!['maestro', 'admin'].includes(rol))
       return res.status(400).json({ error: 'Rol inválido' });
-    if (password.length < 6)
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    if (password.length < 8)
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
 
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
@@ -67,14 +67,20 @@ exports.resetPassword = async (req, res) => {
     const { password_nuevo } = req.body;
     if (!password_nuevo)
       return res.status(400).json({ error: 'La nueva contraseña es requerida' });
-    if (password_nuevo.length < 6)
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    if (password_nuevo.length < 8)
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+
+    // Verificar que el target no es otro admin (un admin no puede resetear a otro admin)
+    const { rows: target } = await pool.query('SELECT rol FROM usuarios WHERE id = $1', [req.params.id]);
+    if (!target[0]) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (target[0].rol === 'admin' && Number(req.params.id) !== req.user.id)
+      return res.status(403).json({ error: 'No puedes modificar la contraseña de otro administrador' });
+
     const hash = await bcrypt.hash(password_nuevo, 10);
     const { rows } = await pool.query(
       'UPDATE usuarios SET password_hash = $1 WHERE id = $2 RETURNING id, nombre',
       [hash, req.params.id]
     );
-    if (!rows[0]) return res.status(404).json({ error: 'Usuario no encontrado' });
     res.json({ message: `Contraseña de ${rows[0].nombre} actualizada` });
   } catch {
     res.status(500).json({ error: 'Error interno' });
@@ -83,11 +89,20 @@ exports.resetPassword = async (req, res) => {
 
 exports.toggle = async (req, res) => {
   try {
+    // No puede desactivarse a sí mismo
+    if (Number(req.params.id) === req.user.id)
+      return res.status(400).json({ error: 'No puedes desactivar tu propia cuenta' });
+
+    // Un admin no puede desactivar a otro admin
+    const { rows: target } = await pool.query('SELECT rol FROM usuarios WHERE id = $1', [req.params.id]);
+    if (!target[0]) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (target[0].rol === 'admin')
+      return res.status(403).json({ error: 'No puedes desactivar a otro administrador' });
+
     const { rows } = await pool.query(
       'UPDATE usuarios SET activo = NOT activo WHERE id = $1 RETURNING id, nombre, activo',
       [req.params.id]
     );
-    if (!rows[0]) return res.status(404).json({ error: 'Usuario no encontrado' });
     res.json(rows[0]);
   } catch {
     res.status(500).json({ error: 'Error interno' });
