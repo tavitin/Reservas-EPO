@@ -1,0 +1,113 @@
+const { pool } = require('../config/db');
+
+exports.getAll = async (req, res) => {
+  try {
+    const isAdmin = req.user.rol === 'admin';
+    const query = isAdmin
+      ? `SELECT r.id, r.usuario_id, r.recurso_id, r.fecha_inicio, r.fecha_fin, r.notas, r.created_at,
+                CASE WHEN r.estado = 'confirmada' AND r.fecha_fin < NOW() THEN 'completada' ELSE r.estado END AS estado,
+                u.nombre AS maestro_nombre, u.email AS maestro_email,
+                rc.nombre AS recurso_nombre, rc.tipo AS recurso_tipo
+         FROM reservas r
+         JOIN usuarios u  ON r.usuario_id = u.id
+         JOIN recursos rc ON r.recurso_id = rc.id
+         ORDER BY r.fecha_inicio DESC`
+      : `SELECT r.id, r.usuario_id, r.recurso_id, r.fecha_inicio, r.fecha_fin, r.notas, r.created_at,
+                CASE WHEN r.estado = 'confirmada' AND r.fecha_fin < NOW() THEN 'completada' ELSE r.estado END AS estado,
+                u.nombre AS maestro_nombre,
+                rc.nombre AS recurso_nombre, rc.tipo AS recurso_tipo
+         FROM reservas r
+         JOIN usuarios u  ON r.usuario_id = u.id
+         JOIN recursos rc ON r.recurso_id = rc.id
+         WHERE r.usuario_id = $1
+         ORDER BY r.fecha_inicio DESC`;
+
+    const params = isAdmin ? [] : [req.user.id];
+    const { rows } = await pool.query(query, params);
+    res.json(rows);
+  } catch {
+    res.status(500).json({ error: 'Error interno' });
+  }
+};
+
+exports.create = async (req, res) => {
+  try {
+    const { recurso_id, fecha_inicio, fecha_fin, notas } = req.body;
+    if (!recurso_id || !fecha_inicio || !fecha_fin)
+      return res.status(400).json({ error: 'Recurso, fecha inicio y fecha fin son requeridos' });
+
+    if (new Date(fecha_inicio) >= new Date(fecha_fin))
+      return res.status(400).json({ error: 'La fecha de inicio debe ser anterior a la fecha de fin' });
+
+    // Verificar conflicto de horario
+    const { rows: conflictos } = await pool.query(
+      `SELECT id FROM reservas
+       WHERE recurso_id = $1
+         AND estado = 'confirmada'
+         AND NOT (fecha_fin <= $2 OR fecha_inicio >= $3)`,
+      [recurso_id, fecha_inicio, fecha_fin]
+    );
+
+    if (conflictos.length > 0)
+      return res.status(409).json({ error: 'El recurso ya está reservado en ese horario' });
+
+    const { rows } = await pool.query(
+      `INSERT INTO reservas (usuario_id, recurso_id, fecha_inicio, fecha_fin, notas)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [req.user.id, recurso_id, fecha_inicio, fecha_fin, notas || null]
+    );
+    res.status(201).json(rows[0]);
+  } catch {
+    res.status(500).json({ error: 'Error interno' });
+  }
+};
+
+exports.cancel = async (req, res) => {
+  try {
+    const isAdmin = req.user.rol === 'admin';
+    const params  = isAdmin ? [req.params.id] : [req.params.id, req.user.id];
+    const where   = isAdmin ? '' : ' AND usuario_id = $2';
+
+    const { rows } = await pool.query(
+      `UPDATE reservas SET estado = 'cancelada'
+       WHERE id = $1${where} AND estado = 'confirmada'
+       RETURNING *`,
+      params
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Reserva no encontrada o sin permiso' });
+    res.json(rows[0]);
+  } catch {
+    res.status(500).json({ error: 'Error interno' });
+  }
+};
+
+exports.disponibilidad = async (req, res) => {
+  try {
+    const { recurso_id, fecha_inicio, fecha_fin } = req.query;
+    if (!recurso_id) return res.status(400).json({ error: 'recurso_id requerido' });
+
+    // Reservas futuras del recurso
+    const { rows: reservas_activas } = await pool.query(
+      `SELECT fecha_inicio, fecha_fin FROM reservas
+       WHERE recurso_id = $1 AND estado = 'confirmada' AND fecha_fin > NOW()
+       ORDER BY fecha_inicio`,
+      [recurso_id]
+    );
+
+    let disponible = true;
+    if (fecha_inicio && fecha_fin) {
+      const { rows: conflictos } = await pool.query(
+        `SELECT id FROM reservas
+         WHERE recurso_id = $1
+           AND estado = 'confirmada'
+           AND NOT (fecha_fin <= $2 OR fecha_inicio >= $3)`,
+        [recurso_id, fecha_inicio, fecha_fin]
+      );
+      disponible = conflictos.length === 0;
+    }
+
+    res.json({ disponible, reservas_activas });
+  } catch {
+    res.status(500).json({ error: 'Error interno' });
+  }
+};

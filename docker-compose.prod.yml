@@ -1,0 +1,55 @@
+version: '3.8'
+
+# Uso: docker-compose -f docker-compose.prod.yml up -d --build
+# Requiere archivo .env.prod en la raíz del proyecto
+
+services:
+
+  db:
+    image: postgres:15-alpine
+    container_name: reserva_epo_db
+    restart: always
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/src/config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reserva_epo_backend
+    restart: always
+    environment:
+      DATABASE_URL:       postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      JWT_SECRET:         ${JWT_SECRET}
+      PORT:               4000
+      CORS_ORIGIN:        ${CORS_ORIGIN}
+      NODE_ENV:           production
+      ADMIN_EMAIL:        ${ADMIN_EMAIL}
+      ADMIN_DEFAULT_PASS: ${ADMIN_DEFAULT_PASS}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reserva_epo_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
