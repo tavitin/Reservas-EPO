@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 import { format, addHours, differenceInMinutes } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -65,6 +66,8 @@ function Stepper({ paso }) {
 
 export default function NuevaReserva() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.rol === 'admin';
   const [recursos, setRecursos]     = useState([]);
   const [form, setForm]             = useState({ recurso_id: '', fecha_inicio: '', fecha_fin: '', notas: '' });
   const [disponible, setDisponible] = useState(null);
@@ -128,7 +131,7 @@ export default function NuevaReserva() {
     try {
       await api.post('/reservas', form);
       toast.success('¡Reserva creada exitosamente!');
-      navigate('/maestro/mis-reservas');
+      navigate(isAdmin ? '/admin/mis-reservas' : '/maestro/mis-reservas');
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al crear reserva');
     } finally {

@@ -3,7 +3,10 @@ const { pool } = require('../config/db');
 exports.getAll = async (req, res) => {
   try {
     const isAdmin = req.user.rol === 'admin';
-    const query = isAdmin
+    // ?own=true permite al admin ver solo sus propias reservas
+    const showAll = isAdmin && req.query.own !== 'true';
+
+    const query = showAll
       ? `SELECT r.id, r.usuario_id, r.recurso_id, r.fecha_inicio, r.fecha_fin, r.notas, r.created_at,
                 CASE WHEN r.estado = 'confirmada' AND r.fecha_fin < NOW() THEN 'completada' ELSE r.estado END AS estado,
                 u.nombre AS maestro_nombre, u.email AS maestro_email,
@@ -22,7 +25,7 @@ exports.getAll = async (req, res) => {
          WHERE r.usuario_id = $1
          ORDER BY r.fecha_inicio DESC`;
 
-    const params = isAdmin ? [] : [req.user.id];
+    const params = showAll ? [] : [req.user.id];
     const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch {

@@ -34,10 +34,12 @@ export default function App() {
         <Route path="/admin" element={
           <PrivateRoute rol="admin"><Layout /></PrivateRoute>
         }>
-          <Route index            element={<AdminDashboard />} />
-          <Route path="recursos"  element={<Recursos />} />
-          <Route path="usuarios"  element={<Usuarios />} />
-          <Route path="reservas"  element={<ReservasAdmin />} />
+          <Route index                   element={<AdminDashboard />} />
+          <Route path="recursos"         element={<Recursos />} />
+          <Route path="usuarios"         element={<Usuarios />} />
+          <Route path="reservas"         element={<ReservasAdmin />} />
+          <Route path="nueva-reserva"    element={<NuevaReserva />} />
+          <Route path="mis-reservas"     element={<MisReservas />} />
         </Route>
 
         <Route path="/maestro" element={

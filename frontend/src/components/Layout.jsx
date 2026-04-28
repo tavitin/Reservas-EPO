@@ -86,10 +86,12 @@ export default function Layout() {
 
   const links = isAdmin
     ? [
-        { to: '/admin',           label: 'Dashboard', end: true },
-        { to: '/admin/recursos',  label: 'Recursos' },
-        { to: '/admin/usuarios',  label: 'Usuarios' },
-        { to: '/admin/reservas',  label: 'Reservas' },
+        { to: '/admin',                label: 'Dashboard',    end: true },
+        { to: '/admin/recursos',       label: 'Recursos' },
+        { to: '/admin/usuarios',       label: 'Usuarios' },
+        { to: '/admin/reservas',       label: 'Reservas' },
+        { to: '/admin/nueva-reserva',  label: 'Nueva Reserva' },
+        { to: '/admin/mis-reservas',   label: 'Mis Reservas' },
       ]
     : [
         { to: '/maestro',                  label: 'Inicio', end: true },

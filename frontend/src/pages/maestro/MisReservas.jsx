@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 import { format, differenceInMinutes } from 'date-fns';
 import { es } from 'date-fns/locale';
 import CalendarioReservas from '../../components/CalendarioReservas';
@@ -98,6 +99,10 @@ function CardSkeleton() {
 }
 
 export default function MisReservas() {
+  const { user } = useAuth();
+  const isAdmin = user?.rol === 'admin';
+  const nuevaRuta = isAdmin ? '/admin/nueva-reserva' : '/maestro/nueva-reserva';
+
   const [reservas, setReservas]       = useState([]);
   const [filtro, setFiltro]           = useState('activas');
   const [busqueda, setBusqueda]       = useState('');
@@ -109,7 +114,9 @@ export default function MisReservas() {
 
   const load = () => {
     setCargando(true);
-    api.get('/reservas').then(r => setReservas(r.data)).catch(() => {}).finally(() => setCargando(false));
+    // El admin usa ?own=true para ver solo sus propias reservas (no todas)
+    const params = isAdmin ? { own: 'true' } : {};
+    api.get('/reservas', { params }).then(r => setReservas(r.data)).catch(() => {}).finally(() => setCargando(false));
   };
   useEffect(() => { load(); }, []);
 
@@ -140,7 +147,7 @@ export default function MisReservas() {
           <h1 className="text-2xl font-bold text-gray-800">Mis Reservas</h1>
           <p className="text-sm text-gray-500 mt-0.5">{reservas.length} reservas en total</p>
         </div>
-        <Link to="/maestro/nueva-reserva"
+        <Link to={nuevaRuta}
           className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -295,7 +302,7 @@ export default function MisReservas() {
                 {filtro === 'activas' ? 'Crea una nueva reserva para verla aquí' : 'Tus reservas pasadas aparecerán aquí'}
               </p>
               {filtro === 'activas' && (
-                <Link to="/maestro/nueva-reserva"
+                <Link to={nuevaRuta}
                   className="inline-flex items-center gap-1.5 mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
