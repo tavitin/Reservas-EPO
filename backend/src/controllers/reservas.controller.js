@@ -3,20 +3,23 @@ const { pool } = require('../config/db');
 exports.getAll = async (req, res) => {
   try {
     const isAdmin = req.user.rol === 'admin';
-    // ?own=true permite al admin ver solo sus propias reservas
     const showAll = isAdmin && req.query.own !== 'true';
 
     const query = showAll
       ? `SELECT r.id, r.usuario_id, r.recurso_id, r.fecha_inicio, r.fecha_fin, r.notas, r.created_at,
-                CASE WHEN r.estado = 'confirmada' AND r.fecha_fin < NOW() THEN 'completada' ELSE r.estado END AS estado,
+                r.estado,
+                r.comentario_entrega, r.fecha_entrega, r.firma_base64,
                 u.nombre AS maestro_nombre, u.email AS maestro_email,
-                rc.nombre AS recurso_nombre, rc.tipo AS recurso_tipo
+                rc.nombre AS recurso_nombre, rc.tipo AS recurso_tipo,
+                recv.nombre AS recibido_por_nombre
          FROM reservas r
-         JOIN usuarios u  ON r.usuario_id = u.id
-         JOIN recursos rc ON r.recurso_id = rc.id
+         JOIN usuarios u    ON r.usuario_id  = u.id
+         JOIN recursos rc   ON r.recurso_id  = rc.id
+         LEFT JOIN usuarios recv ON r.recibido_por = recv.id
          ORDER BY r.fecha_inicio DESC`
       : `SELECT r.id, r.usuario_id, r.recurso_id, r.fecha_inicio, r.fecha_fin, r.notas, r.created_at,
                 CASE WHEN r.estado = 'confirmada' AND r.fecha_fin < NOW() THEN 'completada' ELSE r.estado END AS estado,
+                r.comentario_entrega, r.fecha_entrega,
                 u.nombre AS maestro_nombre,
                 rc.nombre AS recurso_nombre, rc.tipo AS recurso_tipo
          FROM reservas r
@@ -80,6 +83,37 @@ exports.cancel = async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: 'Reserva no encontrada, sin permiso o ya finalizada' });
     res.json(rows[0]);
   } catch {
+    res.status(500).json({ error: 'Error interno' });
+  }
+};
+
+exports.entregar = async (req, res) => {
+  try {
+    const { firma_base64, comentario_entrega } = req.body;
+    if (!firma_base64) return res.status(400).json({ error: 'La firma es requerida para registrar la entrega' });
+
+    const { rows: check } = await pool.query(
+      'SELECT id, estado FROM reservas WHERE id = $1',
+      [req.params.id]
+    );
+    if (!check[0]) return res.status(404).json({ error: 'Reserva no encontrada' });
+    if (check[0].estado !== 'confirmada')
+      return res.status(400).json({ error: 'Solo se pueden recibir reservas confirmadas' });
+
+    const { rows } = await pool.query(
+      `UPDATE reservas
+       SET estado = 'completada',
+           firma_base64       = $1,
+           comentario_entrega = $2,
+           fecha_entrega      = NOW(),
+           recibido_por       = $3
+       WHERE id = $4
+       RETURNING id, estado, fecha_entrega`,
+      [firma_base64, comentario_entrega?.trim() || null, req.user.id, req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('[reservas.entregar]', err);
     res.status(500).json({ error: 'Error interno' });
   }
 };

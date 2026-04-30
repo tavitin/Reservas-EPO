@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import CalendarioReservas from '../../components/CalendarioReservas';
+import EntregaModal from '../../components/EntregaModal';
 
 function Modal({ title, children, onClose }) {
   return (
@@ -56,6 +57,7 @@ export default function ReservasAdmin() {
   const [fechaHasta, setFechaHasta]     = useState('');
   const [detalle, setDetalle]           = useState(null);
   const [confirmCancel, setConfirmCancel] = useState(null);
+  const [entregaReserva, setEntregaReserva] = useState(null);
   const [vista, setVista]               = useState('tabla');
   const [cargando, setCargando]         = useState(true);
 
@@ -245,15 +247,61 @@ export default function ReservasAdmin() {
                 <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 rounded-xl p-3">{detalle.notas}</p>
               </div>
             )}
+            {/* Acciones */}
             {detalle.estado === 'confirmada' && (
-              <button onClick={() => { setConfirmCancel(detalle.id); setDetalle(null); }}
-                className="flex items-center gap-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 text-sm px-3 py-2 rounded-lg transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Cancelar esta reserva
-              </button>
+              <div className="flex flex-wrap gap-2 pt-2 border-t">
+                <button onClick={() => { setEntregaReserva(detalle); setDetalle(null); }}
+                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-xl transition-colors font-medium">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Registrar entrega
+                </button>
+                <button onClick={() => { setConfirmCancel(detalle.id); setDetalle(null); }}
+                  className="flex items-center gap-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 text-sm px-3 py-2 rounded-xl transition-colors border border-red-200">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Cancelar reserva
+                </button>
+              </div>
+            )}
+
+            {/* Detalle de entrega si ya fue completada */}
+            {detalle.estado === 'completada' && detalle.fecha_entrega && (
+              <div className="pt-3 border-t space-y-3">
+                <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Entrega registrada</p>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-emerald-50 rounded-xl p-3">
+                    <p className="text-gray-400 text-xs mb-0.5">Fecha de entrega</p>
+                    <p className="font-semibold text-gray-800 text-xs">
+                      {format(new Date(detalle.fecha_entrega), "dd MMM yyyy HH:mm", { locale: es })}
+                    </p>
+                  </div>
+                  {detalle.recibido_por_nombre && (
+                    <div className="bg-emerald-50 rounded-xl p-3">
+                      <p className="text-gray-400 text-xs mb-0.5">Recibido por</p>
+                      <p className="font-semibold text-gray-800 text-xs">{detalle.recibido_por_nombre}</p>
+                    </div>
+                  )}
+                </div>
+                {detalle.comentario_entrega && (
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-gray-400 text-xs mb-1">Observaciones</p>
+                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{detalle.comentario_entrega}</p>
+                  </div>
+                )}
+                {detalle.firma_base64 && (
+                  <div>
+                    <p className="text-gray-400 text-xs mb-1">Firma del maestro</p>
+                    <div className="border rounded-xl overflow-hidden bg-gray-50 p-2">
+                      <img src={detalle.firma_base64} alt="Firma" className="max-h-24 w-auto mx-auto" />
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </Modal>
@@ -276,6 +324,15 @@ export default function ReservasAdmin() {
       )}
 
       {/* Vista tabla o calendario */}
+      {/* Modal entrega con firma */}
+      {entregaReserva && (
+        <EntregaModal
+          reserva={entregaReserva}
+          onClose={() => setEntregaReserva(null)}
+          onSuccess={load}
+        />
+      )}
+
       {vista === 'calendario' ? (
         <CalendarioReservas reservas={filtered} />
       ) : (
@@ -339,15 +396,22 @@ export default function ReservasAdmin() {
                           </span>
                         </td>
                         <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             {r.estado === 'confirmada' && (
-                              <button
-                                onClick={() => setConfirmCancel(r.id)}
-                                title="Cancelar reserva"
-                                aria-label="Cancelar reserva"
-                                className="text-red-600 hover:text-red-800 hover:bg-red-50 text-xs px-2.5 py-1 rounded-lg transition-colors font-medium">
-                                Cancelar
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => setEntregaReserva(r)}
+                                  title="Registrar entrega"
+                                  className="text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 text-xs px-2.5 py-1 rounded-lg transition-colors font-medium whitespace-nowrap">
+                                  Recibir
+                                </button>
+                                <button
+                                  onClick={() => setConfirmCancel(r.id)}
+                                  title="Cancelar reserva"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs px-2.5 py-1 rounded-lg transition-colors font-medium">
+                                  Cancelar
+                                </button>
+                              </>
                             )}
                             <svg className="w-4 h-4 text-gray-300 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
