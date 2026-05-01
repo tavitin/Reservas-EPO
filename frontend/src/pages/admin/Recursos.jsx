@@ -26,13 +26,13 @@ function TipoIcon({ tipo, className = 'w-6 h-6' }) {
 }
 
 const TIPO_COLORS = {
-  'Proyector':           { bg: 'bg-blue-100',    text: 'text-blue-700',   icon: 'text-blue-500',   border: 'border-l-blue-400'   },
-  'Laptop':              { bg: 'bg-violet-100',   text: 'text-violet-700', icon: 'text-violet-500', border: 'border-l-violet-400' },
-  'Tablet':              { bg: 'bg-cyan-100',     text: 'text-cyan-700',   icon: 'text-cyan-500',   border: 'border-l-cyan-400'   },
-  'Bocina':              { bg: 'bg-pink-100',     text: 'text-pink-700',   icon: 'text-pink-500',   border: 'border-l-pink-400'   },
-  'Cable HDMI':          { bg: 'bg-gray-100',     text: 'text-gray-700',   icon: 'text-gray-500',   border: 'border-l-gray-400'   },
-  'Extensión eléctrica': { bg: 'bg-amber-100',    text: 'text-amber-700',  icon: 'text-amber-500',  border: 'border-l-amber-400'  },
-  'Otro':                { bg: 'bg-teal-100',     text: 'text-teal-700',   icon: 'text-teal-500',   border: 'border-l-teal-400'   },
+  'Proyector':           { bg: 'bg-blue-100',    text: 'text-blue-800',   icon: 'text-blue-600',   border: 'border-l-blue-500'   },
+  'Laptop':              { bg: 'bg-violet-100',   text: 'text-violet-800', icon: 'text-violet-600', border: 'border-l-violet-500' },
+  'Tablet':              { bg: 'bg-cyan-100',     text: 'text-cyan-800',   icon: 'text-cyan-600',   border: 'border-l-cyan-500'   },
+  'Bocina':              { bg: 'bg-pink-100',     text: 'text-pink-800',   icon: 'text-pink-600',   border: 'border-l-pink-500'   },
+  'Cable HDMI':          { bg: 'bg-slate-100',    text: 'text-slate-700',  icon: 'text-slate-500',  border: 'border-l-slate-400'  },
+  'Extensión eléctrica': { bg: 'bg-amber-100',    text: 'text-amber-800',  icon: 'text-amber-600',  border: 'border-l-amber-500'  },
+  'Otro':                { bg: 'bg-teal-100',     text: 'text-teal-800',   icon: 'text-teal-600',   border: 'border-l-teal-500'   },
 };
 function tipoStyle(tipo) { return TIPO_COLORS[tipo] || TIPO_COLORS['Otro']; }
 
@@ -321,8 +321,10 @@ export default function Recursos() {
             const style   = tipoStyle(r.tipo);
             return (
               <div key={r.id}
-                className={`group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col border-l-4 ${
-                  activas > 0 ? 'border-l-orange-400' : style.border
+                className={`bg-white rounded-2xl border shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 p-5 flex flex-col border-l-4 ${
+                  activas > 0
+                    ? 'border-gray-200 border-l-orange-400'
+                    : `border-gray-200 ${style.border}`
                 }`}
               >
                 {/* Icono + badge tipo */}
@@ -330,38 +332,41 @@ export default function Recursos() {
                   <div className={`w-11 h-11 ${style.bg} rounded-xl flex items-center justify-center`}>
                     <TipoIcon tipo={r.tipo} className={`w-6 h-6 ${style.icon}`} />
                   </div>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>
+                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${style.bg} ${style.text}`}>
                     {r.tipo}
                   </span>
                 </div>
 
                 {/* Nombre + descripción */}
-                <h3 className="font-semibold text-gray-800 text-sm leading-snug mb-1">{r.nombre}</h3>
+                <h3 className="font-semibold text-gray-900 text-sm leading-snug mb-1">{r.nombre}</h3>
                 {r.descripcion && (
-                  <p className="text-xs text-gray-400 mb-2 line-clamp-1" title={r.descripcion}>{r.descripcion}</p>
+                  <p className="text-xs text-gray-500 mb-2 line-clamp-1" title={r.descripcion}>{r.descripcion}</p>
                 )}
 
                 {/* Estado reservas */}
                 <div className="mt-auto pt-3">
                   {activas > 0 ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full">
-                      <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-700 bg-orange-100 px-2.5 py-1 rounded-full border border-orange-200">
+                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
                       {activas} reserva{activas > 1 ? 's' : ''} activa{activas > 1 ? 's' : ''}
                     </span>
                   ) : (
-                    <span className="text-xs text-gray-400">Disponible</span>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                      Disponible
+                    </span>
                   )}
                 </div>
 
-                {/* Acciones icon-only — visibles en hover */}
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Botones siempre visibles */}
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
                   <button
                     onClick={() => handleEdit(r)}
                     title="Editar"
                     aria-label={`Editar ${r.nombre}`}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-xs text-blue-600 hover:bg-blue-50 py-1.5 rounded-lg transition-colors font-medium"
+                    className="flex-1 flex items-center justify-center gap-1.5 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 py-2 rounded-lg transition-colors font-semibold"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
@@ -371,9 +376,9 @@ export default function Recursos() {
                     onClick={() => setConfirmDel(r.id)}
                     title="Eliminar"
                     aria-label={`Eliminar ${r.nombre}`}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-xs text-red-500 hover:bg-red-50 py-1.5 rounded-lg transition-colors font-medium"
+                    className="flex-1 flex items-center justify-center gap-1.5 text-xs text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 py-2 rounded-lg transition-colors font-semibold"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
