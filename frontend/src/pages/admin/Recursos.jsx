@@ -169,52 +169,107 @@ export default function Recursos() {
       </div>
 
       {/* ── Filtros ── */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 space-y-3">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+
         {/* Búsqueda */}
-        <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
-          </svg>
-          <input
-            type="text" placeholder="Buscar por nombre..."
-            className={`${inputClass} pl-10 pr-10 bg-white`}
-            value={busqueda} onChange={e => setBusqueda(e.target.value)}
-          />
-          {busqueda && (
-            <button onClick={() => setBusqueda('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
+        <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
+            </svg>
+            <input
+              type="text" placeholder="Buscar por nombre..."
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white hover:border-gray-300 transition-colors"
+              value={busqueda} onChange={e => setBusqueda(e.target.value)}
+            />
+            {busqueda && (
+              <button onClick={() => setBusqueda('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Chips de tipo — scroll horizontal en mobile */}
-        <div ref={chipsRef} className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-          <button
-            onClick={() => setTipoFiltro('')}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-              !tipoFiltro ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-            }`}
+        {/* Chips de tipo con ícono — scroll horizontal sin scrollbar visible */}
+        <div className="px-4 py-3">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Filtrar por tipo</p>
+          <div
+            ref={chipsRef}
+            className="flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            Todos ({recursos.length})
-          </button>
-          {TIPOS.map(t => {
-            const count = recursos.filter(r => r.tipo === t).length;
-            if (count === 0) return null;
-            const s = tipoStyle(t);
-            return (
-              <button key={t} onClick={() => setTipoFiltro(tipoFiltro === t ? '' : t)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                  tipoFiltro === t ? `${s.bg} ${s.text}` : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                }`}
-              >
-                {t} ({count})
-              </button>
-            );
-          })}
+            {/* Chip "Todos" */}
+            <button
+              onClick={() => setTipoFiltro('')}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                !tipoFiltro
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              Todos
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                !tipoFiltro ? 'bg-white/25 text-white' : 'bg-gray-200 text-gray-500'
+              }`}>
+                {recursos.length}
+              </span>
+            </button>
+
+            {/* Chips por tipo */}
+            {TIPOS.map(t => {
+              const count = recursos.filter(r => r.tipo === t).length;
+              if (count === 0) return null;
+              const s = tipoStyle(t);
+              const activo = tipoFiltro === t;
+              return (
+                <button key={t}
+                  onClick={() => setTipoFiltro(activo ? '' : t)}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                    activo
+                      ? `${s.bg} ${s.text} border-transparent shadow-sm`
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className={activo ? s.icon : 'text-gray-400'}>
+                    <TipoIcon tipo={t} className="w-3.5 h-3.5 shrink-0" />
+                  </span>
+                  {t}
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    activo ? 'bg-black/10' : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Barra de estado del filtro activo */}
+        {(busqueda || tipoFiltro) && (
+          <div className="px-4 py-2 bg-blue-50 border-t border-blue-100 flex items-center justify-between">
+            <p className="text-xs text-blue-700 font-medium">
+              {filtrados.length} resultado{filtrados.length !== 1 ? 's' : ''}
+              {tipoFiltro && <span className="ml-1">· {tipoFiltro}</span>}
+              {busqueda && <span className="ml-1">· "{busqueda}"</span>}
+            </p>
+            <button
+              onClick={() => { setBusqueda(''); setTipoFiltro(''); }}
+              className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 transition-colors"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Limpiar
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Modal form ── */}
