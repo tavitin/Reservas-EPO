@@ -4,11 +4,12 @@ const { pool } = require('../config/db');
 
 const isProd = process.env.NODE_ENV === 'production';
 
-const COOKIE_OPTS = {
+const TOKEN_TTL    = '30m';                 // alineado con timeout de inactividad del frontend
+const COOKIE_OPTS  = {
   httpOnly : true,                          // inaccesible desde JS (protege contra XSS)
   secure   : isProd,                        // solo HTTPS en producción
   sameSite : isProd ? 'none' : 'lax',       // cross-origin en prod (Railway), lax en dev
-  maxAge   : 8 * 60 * 60 * 1000,           // 8 horas en ms
+  maxAge   : 30 * 60 * 1000,               // 30 minutos en ms
   path     : '/',
 };
 
@@ -27,7 +28,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
 
     const payload = { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol };
-    const token   = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
+    const token   = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: TOKEN_TTL });
 
     // Token en cookie httpOnly — no viaja en el body
     res.cookie('auth_token', token, COOKIE_OPTS);

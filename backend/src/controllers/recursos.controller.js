@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const audit   = require('../utils/audit');
 
 exports.getAll = async (_req, res) => {
   try {
@@ -21,6 +22,7 @@ exports.create = async (req, res) => {
       'INSERT INTO recursos (nombre, tipo, descripcion) VALUES ($1, $2, $3) RETURNING *',
       [nombre.trim(), tipo.trim(), descripcion?.trim() || null]
     );
+    audit.log('RECURSO_CREADO', req.user, { recurso_id: rows[0].id, nombre: rows[0].nombre, tipo: rows[0].tipo });
     res.status(201).json(rows[0]);
   } catch {
     res.status(500).json({ error: 'Error interno' });
@@ -37,6 +39,7 @@ exports.update = async (req, res) => {
       [nombre, tipo, descripcion || null, req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Recurso no encontrado' });
+    audit.log('RECURSO_EDITADO', req.user, { recurso_id: rows[0].id, nombre: rows[0].nombre });
     res.json(rows[0]);
   } catch {
     res.status(500).json({ error: 'Error interno' });
@@ -61,6 +64,7 @@ exports.remove = async (req, res) => {
       [req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Recurso no encontrado' });
+    audit.log('RECURSO_ELIMINADO', req.user, { recurso_id: rows[0].id });
     res.json({ message: 'Recurso eliminado' });
   } catch {
     res.status(500).json({ error: 'Error interno' });

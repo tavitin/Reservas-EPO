@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
+const audit  = require('../utils/audit');
 
 /**
  * Valida complejidad de contraseña.
@@ -39,6 +40,7 @@ exports.create = async (req, res) => {
       'INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES ($1, $2, $3, $4) RETURNING id, nombre, email, rol',
       [nombre.trim(), email.toLowerCase().trim(), hash, rol]
     );
+    audit.log('USUARIO_CREADO', req.user, { nuevo_usuario: rows[0].email, rol });
     res.status(201).json(rows[0]);
   } catch (err) {
     if (err.code === '23505') return res.status(400).json({ error: 'Ese email ya está registrado' });
@@ -93,6 +95,7 @@ exports.resetPassword = async (req, res) => {
       'UPDATE usuarios SET password_hash = $1 WHERE id = $2 RETURNING id, nombre',
       [hash, req.params.id]
     );
+    audit.log('PASSWORD_RESET', req.user, { usuario_id: req.params.id, usuario_nombre: rows[0].nombre });
     res.json({ message: `Contraseña de ${rows[0].nombre} actualizada` });
   } catch {
     res.status(500).json({ error: 'Error interno' });
@@ -115,6 +118,11 @@ exports.toggle = async (req, res) => {
       'UPDATE usuarios SET activo = NOT activo WHERE id = $1 RETURNING id, nombre, activo',
       [req.params.id]
     );
+    audit.log('USUARIO_TOGGLE', req.user, {
+      usuario_id     : rows[0].id,
+      usuario_nombre : rows[0].nombre,
+      nuevo_estado   : rows[0].activo ? 'activado' : 'desactivado',
+    });
     res.json(rows[0]);
   } catch {
     res.status(500).json({ error: 'Error interno' });
