@@ -91,6 +91,9 @@ export default function NuevaReserva() {
       .catch(() => setOcupados([]));
   }, [form.recurso_id, form.fecha_inicio]);
 
+  // Convierte string datetime-local (hora local del browser) a ISO UTC
+  const toUTC = (localStr) => localStr ? new Date(localStr).toISOString() : '';
+
   const checkDisponibilidad = async (override = {}) => {
     const recurso_id = form.recurso_id;
     const fecha_inicio = override.fecha_inicio ?? form.fecha_inicio;
@@ -98,7 +101,11 @@ export default function NuevaReserva() {
     if (!recurso_id || !fecha_inicio || !fecha_fin) return;
     try {
       const { data } = await api.get('/reservas/disponibilidad', {
-        params: { recurso_id, fecha_inicio, fecha_fin },
+        params: {
+          recurso_id,
+          fecha_inicio: toUTC(fecha_inicio),
+          fecha_fin:    toUTC(fecha_fin),
+        },
       });
       setDisponible(data.disponible);
     } catch { setDisponible(null); }
@@ -129,7 +136,12 @@ export default function NuevaReserva() {
       return toast.error('La fecha de inicio debe ser anterior a la de fin');
     setLoading(true);
     try {
-      await api.post('/reservas', form);
+      // Enviamos las fechas como ISO UTC para que el servidor compare correctamente
+      await api.post('/reservas', {
+        ...form,
+        fecha_inicio: toUTC(form.fecha_inicio),
+        fecha_fin:    toUTC(form.fecha_fin),
+      });
       toast.success('¡Reserva creada exitosamente!');
       navigate(isAdmin ? '/admin/mis-reservas' : '/maestro/mis-reservas');
     } catch (err) {

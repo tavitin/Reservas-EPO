@@ -7,7 +7,7 @@ exports.getAll = async (req, res) => {
 
     const query = showAll
       ? `SELECT r.id, r.usuario_id, r.recurso_id, r.fecha_inicio, r.fecha_fin, r.notas, r.created_at,
-                r.estado,
+                CASE WHEN r.estado = 'confirmada' AND r.fecha_fin < NOW() THEN 'completada' ELSE r.estado END AS estado,
                 r.comentario_entrega, r.fecha_entrega, r.firma_base64,
                 u.nombre AS maestro_nombre, u.email AS maestro_email,
                 rc.nombre AS recurso_nombre, rc.tipo AS recurso_tipo,
