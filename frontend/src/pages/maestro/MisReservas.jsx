@@ -240,19 +240,22 @@ export default function MisReservas() {
 
       {/* ── Filtros + búsqueda + toggle vista ─────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 space-y-3">
-        {/* Fila 1: tabs de filtro + toggle (separados en mobile) */}
-        <div className="flex items-center justify-between gap-2">
-          {/* Chips */}
-          <div className="flex flex-wrap gap-1.5">
+        {/* Fila 1: tabs de filtro + toggle — todo en una sola línea */}
+        <div className="flex items-center gap-2">
+          {/* Chips — scroll horizontal, nunca wrappean */}
+          <div
+            className="flex gap-1.5 overflow-x-auto flex-1 [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: 'none' }}
+          >
             {FILTROS.map(({ val, label, cnt }) => (
               <button key={val} onClick={() => setFiltro(val)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                   filtro === val
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                 }`}>
                 {label}
-                <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
                   filtro === val ? 'bg-white/25 text-white' : 'bg-gray-200 text-gray-500'
                 }`}>
                   {cnt}
@@ -261,7 +264,7 @@ export default function MisReservas() {
             ))}
           </div>
 
-          {/* Toggle vista — siempre a la derecha, sin wrapping */}
+          {/* Toggle vista — anclado a la derecha */}
           <div className="flex gap-0.5 bg-gray-100 p-0.5 rounded-lg shrink-0">
             {[['lista', 'Lista'], ['calendario', 'Cal.']].map(([v, lbl]) => (
               <button key={v} onClick={() => setVista(v)}

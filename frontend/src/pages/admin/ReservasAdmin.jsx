@@ -218,9 +218,9 @@ export default function ReservasAdmin() {
         {/* Chips de estado + controles */}
         <div className="px-4 pt-4 pb-3 space-y-3">
 
-          {/* Fila 1: chips con scroll horizontal — nunca wrappean */}
+          {/* Fila 1: chips con scroll horizontal — -mx extiende el scroll al borde del card */}
           <div
-            className="flex gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden"
+            className="-mx-4 px-4 flex gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden"
             style={{ scrollbarWidth: 'none' }}
           >
             {ESTADOS.map(([val, label]) => (

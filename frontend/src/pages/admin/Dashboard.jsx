@@ -291,8 +291,8 @@ export default function AdminDashboard() {
       {/* ── Cabecera ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <p className="text-sm text-gray-400 font-medium capitalize">{greeting()} · {hoyStr}</p>
-          <h1 className="text-2xl font-bold text-gray-900 mt-0.5">Panel de administración</h1>
+          <p className="text-xs sm:text-sm text-gray-400 font-medium capitalize">{greeting()} · {hoyStr}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mt-0.5">Panel de administración</h1>
         </div>
         <button
           onClick={() => load(true)}
@@ -307,30 +307,30 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* ── Stat cards (limpias, sin gradientes) ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      {/* ── Stat cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
         {CARDS.map(c => (
           <div key={c.key}
-            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 ${c.bg} ${c.color} rounded-xl flex items-center justify-center mb-3`}>
+            className={`bg-white rounded-2xl border border-gray-200 border-t-4 ${c.bg.replace('bg-', 'border-t-').replace('-50', '-500')} p-3 sm:p-5 shadow-sm hover:shadow-md transition-shadow`}>
+            <div className={`w-8 h-8 sm:w-10 sm:h-10 ${c.bg} ${c.color} rounded-xl flex items-center justify-center mb-2 sm:mb-3`}>
               {c.icon}
             </div>
             {cargando
-              ? <Skeleton className="h-7 sm:h-8 w-12 sm:w-16 mb-1" />
-              : <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats[c.key]}</p>
+              ? <Skeleton className="h-6 sm:h-8 w-10 sm:w-16 mb-1" />
+              : <p className="text-xl sm:text-3xl font-extrabold text-gray-900 leading-none">{stats[c.key]}</p>
             }
-            <p className="text-xs text-gray-500 mt-1 font-medium leading-tight">{c.label}</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-1 font-semibold leading-tight">{c.label}</p>
           </div>
         ))}
       </div>
 
       {/* ── Fila: gráfico semanal + timeline hoy ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-4">
 
         {/* Gráfico semanal */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-700">Reservas esta semana</h2>
+            <h2 className="text-xs sm:text-sm font-bold text-gray-800">Reservas esta semana</h2>
             <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Lun – Dom</span>
           </div>
           {cargando
@@ -340,9 +340,9 @@ export default function AdminDashboard() {
         </div>
 
         {/* Timeline del día */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-700">Actividad de hoy</h2>
+            <h2 className="text-xs sm:text-sm font-bold text-gray-800">Actividad de hoy</h2>
             <span className="flex items-center gap-1 text-[10px] text-red-500 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
               Ahora
@@ -357,8 +357,8 @@ export default function AdminDashboard() {
 
       {/* ── Reservas recientes / Calendario ── */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-800">Reservas recientes</h2>
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-gray-200">
+          <h2 className="text-sm sm:text-base font-bold text-gray-800">Reservas recientes</h2>
           <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
             {['tabla', 'calendario'].map(v => (
               <button key={v} onClick={() => setVista(v)}
@@ -371,7 +371,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {vista === 'tabla' ? (
             cargando ? (
               <div className="space-y-3">
@@ -489,11 +489,13 @@ export default function AdminDashboard() {
                     {/* Paginador */}
                     {totalPaginas > 1 && (
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <p className="text-xs text-gray-500">
-                          Mostrando <span className="font-semibold text-gray-700">{paginaActual * ITEMS_POR_PAGINA + 1}–{Math.min((paginaActual + 1) * ITEMS_POR_PAGINA, recientes.length)}</span> de <span className="font-semibold text-gray-700">{recientes.length}</span> reservas
+                        <p className="text-xs text-gray-500 hidden sm:block">
+                          Mostrando <span className="font-semibold text-gray-700">{paginaActual * ITEMS_POR_PAGINA + 1}–{Math.min((paginaActual + 1) * ITEMS_POR_PAGINA, recientes.length)}</span> de <span className="font-semibold text-gray-700">{recientes.length}</span>
+                        </p>
+                        <p className="text-xs text-gray-500 sm:hidden">
+                          {paginaActual + 1} / {totalPaginas}
                         </p>
                         <div className="flex items-center gap-1">
-                          {/* Anterior */}
                           <button
                             onClick={() => setPaginaActual(p => Math.max(0, p - 1))}
                             disabled={paginaActual === 0}
@@ -504,22 +506,23 @@ export default function AdminDashboard() {
                             </svg>
                           </button>
 
-                          {/* Números de página */}
-                          {Array.from({ length: totalPaginas }, (_, i) => (
-                            <button
-                              key={i}
-                              onClick={() => setPaginaActual(i)}
-                              className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-semibold transition-all ${
-                                paginaActual === i
-                                  ? 'bg-blue-500 text-white shadow-sm'
-                                  : 'border border-gray-200 text-gray-500 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
-                              }`}
-                            >
-                              {i + 1}
-                            </button>
-                          ))}
+                          {/* Números — solo desktop */}
+                          <div className="hidden sm:flex items-center gap-1">
+                            {Array.from({ length: totalPaginas }, (_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setPaginaActual(i)}
+                                className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-semibold transition-all ${
+                                  paginaActual === i
+                                    ? 'bg-blue-500 text-white shadow-sm'
+                                    : 'border border-gray-200 text-gray-500 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+                                }`}
+                              >
+                                {i + 1}
+                              </button>
+                            ))}
+                          </div>
 
-                          {/* Siguiente */}
                           <button
                             onClick={() => setPaginaActual(p => Math.min(totalPaginas - 1, p + 1))}
                             disabled={paginaActual === totalPaginas - 1}
