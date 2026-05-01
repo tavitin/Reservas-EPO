@@ -198,71 +198,74 @@ export default function MisReservas() {
         </Link>
       </div>
 
-      {/* ── Tarjetas de estadísticas (todos los usuarios) ─────────────────── */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* ── Tarjetas de estadísticas ─────────────────────────────────────── */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {/* Activas */}
-        <div className="bg-white border border-emerald-200 rounded-2xl px-4 py-3.5 flex items-center gap-3">
-          <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white border border-emerald-200 rounded-2xl p-3 sm:px-4 sm:py-3.5 flex flex-col sm:flex-row sm:items-center sm:gap-3">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0 mb-1.5 sm:mb-0">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <p className="text-2xl font-bold text-emerald-600 leading-none">{cntActivas}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Activas</p>
+            <p className="text-xl sm:text-2xl font-bold text-emerald-600 leading-none">{cntActivas}</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 leading-tight">Activas</p>
           </div>
         </div>
         {/* Esta semana */}
-        <div className="bg-white border border-blue-200 rounded-2xl px-4 py-3.5 flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white border border-blue-200 rounded-2xl p-3 sm:px-4 sm:py-3.5 flex flex-col sm:flex-row sm:items-center sm:gap-3">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-100 rounded-xl flex items-center justify-center shrink-0 mb-1.5 sm:mb-0">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
           <div>
-            <p className="text-2xl font-bold text-blue-600 leading-none">{estaSemana}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Esta semana</p>
+            <p className="text-xl sm:text-2xl font-bold text-blue-600 leading-none">{estaSemana}</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 leading-tight">Esta semana</p>
           </div>
         </div>
         {/* Completadas */}
-        <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3.5 flex items-center gap-3">
-          <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:px-4 sm:py-3.5 flex flex-col sm:flex-row sm:items-center sm:gap-3">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-slate-100 rounded-xl flex items-center justify-center shrink-0 mb-1.5 sm:mb-0">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
             </svg>
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-600 leading-none">{completadas}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Completadas</p>
+            <p className="text-xl sm:text-2xl font-bold text-slate-600 leading-none">{completadas}</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 leading-tight">Completadas</p>
           </div>
         </div>
       </div>
 
       {/* ── Filtros + búsqueda + toggle vista ─────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 space-y-3">
-        {/* Fila 1: tabs de filtro */}
-        <div className="flex flex-wrap items-center gap-2">
-          {FILTROS.map(({ val, label, cnt }) => (
-            <button key={val} onClick={() => setFiltro(val)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                filtro === val
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-              }`}>
-              {label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                filtro === val ? 'bg-white/25 text-white' : 'bg-gray-200 text-gray-500'
-              }`}>
-                {cnt}
-              </span>
-            </button>
-          ))}
+        {/* Fila 1: tabs de filtro + toggle (separados en mobile) */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Chips */}
+          <div className="flex flex-wrap gap-1.5">
+            {FILTROS.map(({ val, label, cnt }) => (
+              <button key={val} onClick={() => setFiltro(val)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                  filtro === val
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                }`}>
+                {label}
+                <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                  filtro === val ? 'bg-white/25 text-white' : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {cnt}
+                </span>
+              </button>
+            ))}
+          </div>
 
-          {/* Toggle vista */}
-          <div className="ml-auto flex gap-0.5 bg-gray-100 p-0.5 rounded-lg">
-            {[['lista', 'Lista'], ['calendario', 'Calendario']].map(([v, lbl]) => (
+          {/* Toggle vista — siempre a la derecha, sin wrapping */}
+          <div className="flex gap-0.5 bg-gray-100 p-0.5 rounded-lg shrink-0">
+            {[['lista', 'Lista'], ['calendario', 'Cal.']].map(([v, lbl]) => (
               <button key={v} onClick={() => setVista(v)}
-                className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
+                className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors whitespace-nowrap ${
                   vista === v ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
                 }`}>
                 {lbl}
@@ -420,33 +423,44 @@ export default function MisReservas() {
 
             return (
               <div key={r.id}
-                className={`bg-white rounded-2xl border border-gray-200 border-l-4 ${v.border} shadow-sm hover:shadow-md hover:-translate-y-px transition-all cursor-pointer p-4 flex items-center gap-4`}
+                className={`bg-white rounded-2xl border border-gray-200 border-l-4 ${v.border} shadow-sm hover:shadow-md hover:-translate-y-px transition-all cursor-pointer p-4`}
                 onClick={() => setDetalle(r)}>
 
-                {/* Ícono recurso */}
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${v.iconBg}`}>
-                  <RecursoIcon tipo={r.recurso_tipo} className={`w-5 h-5 ${v.iconTxt}`} />
+                {/* Fila principal */}
+                <div className="flex items-start gap-3">
+                  {/* Ícono recurso */}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${v.iconBg}`}>
+                    <RecursoIcon tipo={r.recurso_tipo} className={`w-5 h-5 ${v.iconTxt}`} />
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-gray-800 text-sm leading-snug">
+                        {r.recurso_nombre}
+                        <span className="text-gray-400 font-normal text-xs ml-1">({r.recurso_tipo})</span>
+                      </p>
+                      {/* Badge — siempre visible arriba a la derecha */}
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0 ${v.badge}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${v.dot}`} />
+                        {v.label}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-gray-500 mt-0.5 flex flex-wrap gap-x-1">
+                      <span>{format(new Date(r.fecha_inicio), 'dd MMM · HH:mm', { locale: es })}</span>
+                      <span className="text-gray-300">→</span>
+                      <span>{format(new Date(r.fecha_fin), 'HH:mm')}</span>
+                      {dur && <span className="text-gray-400">· {dur}</span>}
+                    </p>
+                    {r.notas && <p className="text-xs text-gray-400 mt-0.5 truncate">{r.notas}</p>}
+                  </div>
                 </div>
 
-                {/* Info principal */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 text-sm truncate">
-                    {r.recurso_nombre}
-                    <span className="text-gray-400 font-normal text-xs ml-1.5">({r.recurso_tipo})</span>
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {format(new Date(r.fecha_inicio), 'dd MMM yyyy · HH:mm', { locale: es })}
-                    <span className="mx-1 text-gray-300">→</span>
-                    {format(new Date(r.fecha_fin), 'HH:mm')}
-                    {dur && (
-                      <span className="ml-2 text-gray-400">· {dur}</span>
-                    )}
-                  </p>
-                  {r.notas && <p className="text-xs text-gray-400 mt-0.5 truncate">{r.notas}</p>}
-
-                  {/* Barra de progreso solo para activas */}
-                  {activa && (
-                    <div className="mt-2 flex items-center gap-2">
+                {/* Barra de progreso + botón cancelar */}
+                {activa && (
+                  <div className="mt-3 pl-[52px]" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center gap-2 mb-2">
                       <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-1000"
@@ -457,25 +471,12 @@ export default function MisReservas() {
                         {getProgressPercent(r.fecha_inicio, r.fecha_fin)}%
                       </span>
                     </div>
-                  )}
-                </div>
-
-                {/* Acciones */}
-                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end" onClick={e => e.stopPropagation()}>
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${v.badge}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${v.dot}`} />
-                    {v.label}
-                  </span>
-                  {activa && (
                     <button onClick={() => setConfirmCancel(r.id)}
-                      className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium">
-                      Cancelar
+                      className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-colors font-medium border border-red-100">
+                      Cancelar reserva
                     </button>
-                  )}
-                  <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -486,23 +487,32 @@ export default function MisReservas() {
       {!cargando && vista === 'lista' && totalPaginas > 1 && (
         <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3">
           <p className="text-xs text-gray-500">
-            Mostrando <span className="font-semibold text-gray-700">{(pagina - 1) * PAGE_SIZE + 1}–{Math.min(pagina * PAGE_SIZE, filtered.length)}</span> de <span className="font-semibold text-gray-700">{filtered.length}</span>
+            <span className="font-semibold text-gray-700">{(pagina - 1) * PAGE_SIZE + 1}–{Math.min(pagina * PAGE_SIZE, filtered.length)}</span>
+            <span className="hidden sm:inline"> de </span>
+            <span className="hidden sm:inline font-semibold text-gray-700">{filtered.length}</span>
           </p>
           <div className="flex items-center gap-1">
             <button onClick={() => setPagina(p => p - 1)} disabled={pagina === 1}
-              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label="Anterior">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
-              <button key={n} onClick={() => setPagina(n)}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${n === pagina ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                {n}
-              </button>
-            ))}
+            {/* Números en desktop */}
+            <div className="hidden sm:flex items-center gap-1">
+              {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+                <button key={n} onClick={() => setPagina(n)}
+                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${n === pagina ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                  {n}
+                </button>
+              ))}
+            </div>
+            {/* Contador compacto en mobile */}
+            <span className="sm:hidden text-xs font-semibold text-gray-700 px-2">
+              {pagina} / {totalPaginas}
+            </span>
             <button onClick={() => setPagina(p => p + 1)} disabled={pagina === totalPaginas}
-              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label="Siguiente">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>

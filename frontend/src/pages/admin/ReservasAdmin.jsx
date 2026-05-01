@@ -215,9 +215,10 @@ export default function ReservasAdmin() {
 
       {/* ── Filtros ── */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
-        {/* Chips de estado + toggle vista */}
-        <div className="flex flex-wrap gap-2 items-center p-4">
-          <div className="flex gap-1.5 flex-wrap">
+        {/* Chips de estado + controles */}
+        <div className="p-4 space-y-3">
+          {/* Fila 1: chips de estado */}
+          <div className="flex flex-wrap gap-1.5">
             {ESTADOS.map(([val, label]) => (
               <button key={val} onClick={() => setFiltro(val)}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
@@ -227,7 +228,7 @@ export default function ReservasAdmin() {
                 }`}>
                 {label}
                 {val === 'todas' && (
-                  <span className="ml-1.5 bg-white/30 px-1.5 py-0.5 rounded-full text-[10px]">
+                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${filtro === val ? 'bg-white/30' : 'bg-gray-200 text-gray-500'}`}>
                     {reservas.length}
                   </span>
                 )}
@@ -235,8 +236,9 @@ export default function ReservasAdmin() {
             ))}
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            {/* Botón para acordeón de filtros avanzados en mobile */}
+          {/* Fila 2: Filtros + Toggle vista */}
+          <div className="flex items-center gap-2">
+            {/* Botón acordeón filtros — mobile */}
             <button
               onClick={() => setFiltrosOpen(v => !v)}
               className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border transition-all md:hidden ${
@@ -252,11 +254,11 @@ export default function ReservasAdmin() {
               Filtros {hayFiltros && <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
             </button>
 
-            {/* Toggle vista */}
-            <div className="flex gap-0.5 bg-gray-100 p-0.5 rounded-lg">
+            {/* Toggle vista — siempre visible, va a la derecha */}
+            <div className="ml-auto flex gap-0.5 bg-gray-100 p-0.5 rounded-lg shrink-0">
               {[['tabla','Tabla'],['calendario','Cal.']].map(([v,lbl]) => (
                 <button key={v} onClick={() => setVista(v)}
-                  className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
+                  className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors whitespace-nowrap ${
                     vista === v ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
                   }`}>{lbl}
                 </button>
@@ -565,7 +567,9 @@ export default function ReservasAdmin() {
           {!cargando && totalPaginas > 1 && (
             <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3">
               <p className="text-xs text-gray-500">
-                Mostrando <span className="font-semibold text-gray-700">{(pagina - 1) * PAGE_SIZE + 1}–{Math.min(pagina * PAGE_SIZE, filtered.length)}</span> de <span className="font-semibold text-gray-700">{filtered.length}</span> reservas
+                <span className="font-semibold text-gray-700">{(pagina - 1) * PAGE_SIZE + 1}–{Math.min(pagina * PAGE_SIZE, filtered.length)}</span>
+                <span className="hidden sm:inline"> de </span>
+                <span className="hidden sm:inline font-semibold text-gray-700">{filtered.length} reservas</span>
               </p>
               <div className="flex items-center gap-1">
                 <button onClick={() => setPagina(p => p - 1)} disabled={pagina === 1}
@@ -574,12 +578,19 @@ export default function ReservasAdmin() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
-                  <button key={n} onClick={() => setPagina(n)}
-                    className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${n === pagina ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>
-                    {n}
-                  </button>
-                ))}
+                {/* Números en desktop */}
+                <div className="hidden sm:flex items-center gap-1">
+                  {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+                    <button key={n} onClick={() => setPagina(n)}
+                      className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${n === pagina ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                {/* Contador compacto en mobile */}
+                <span className="sm:hidden text-xs font-semibold text-gray-700 px-2">
+                  {pagina} / {totalPaginas}
+                </span>
                 <button onClick={() => setPagina(p => p + 1)} disabled={pagina === totalPaginas}
                   className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label="Siguiente">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
