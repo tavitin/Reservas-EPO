@@ -233,6 +233,7 @@ export default function AdminDashboard() {
   const [refreshing,    setRefreshing]    = useState(false);
   const [modalDia,      setModalDia]      = useState(null);
   const [modalReserva,  setModalReserva]  = useState(null);
+  const [paginaActual,  setPaginaActual]  = useState(0);
 
   const load = useCallback((isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -251,7 +252,8 @@ export default function AdminDashboard() {
           maestros:    uRes.data.length,
           activas:     reservas.filter(r => r.estado === 'confirmada' && new Date(r.fecha_fin) > ahora).length,
         });
-        setRecientes(reservas.slice(0, 8));
+        setRecientes(reservas.slice(0, 30));
+        setPaginaActual(0);
 
         const lunes = startOfWeek(new Date(), { weekStartsOn: 1 });
         setSemanaData(
@@ -393,90 +395,146 @@ export default function AdminDashboard() {
                 <p className="text-gray-500 font-semibold">Sin reservas</p>
                 <p className="text-gray-400 text-sm mt-1">Las reservas aparecerán aquí cuando los maestros las creen</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {recientes.map(r => {
-                  const b = estadoBadge(r.estado, r.fecha_fin);
-                  const duracion = differenceInMinutes(new Date(r.fecha_fin), new Date(r.fecha_inicio));
-                  const fechaInicio = new Date(r.fecha_inicio);
-                  const fechaFin = new Date(r.fecha_fin);
+            ) : (() => {
+                const ITEMS_POR_PAGINA = 3;
+                const totalPaginas = Math.ceil(recientes.length / ITEMS_POR_PAGINA);
+                const paginados = recientes.slice(paginaActual * ITEMS_POR_PAGINA, (paginaActual + 1) * ITEMS_POR_PAGINA);
 
-                  return (
-                    <button
-                      key={r.id}
-                      onClick={() => handleClickReserva(r)}
-                      className="text-left p-4 bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 group"
-                    >
-                      {/* Header: Recurso + Estado */}
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors truncate">
-                            {r.recurso_nombre}
-                          </h3>
-                          <p className="text-xs text-gray-500 mt-0.5">{r.maestro_nombre}</p>
-                        </div>
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${b.bg}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${b.dot}`} />
-                          {b.label}
-                        </span>
-                      </div>
+                return (
+                  <div>
+                    {/* Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+                      {paginados.map(r => {
+                        const b = estadoBadge(r.estado, r.fecha_fin);
+                        const duracion = differenceInMinutes(new Date(r.fecha_fin), new Date(r.fecha_inicio));
+                        const fechaInicio = new Date(r.fecha_inicio);
+                        const fechaFin = new Date(r.fecha_fin);
 
-                      {/* Tipo badge */}
-                      <div className="mb-3 flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                          {r.recurso_tipo}
-                        </span>
-                      </div>
+                        return (
+                          <button
+                            key={r.id}
+                            onClick={() => handleClickReserva(r)}
+                            className="text-left p-4 bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 group"
+                          >
+                            {/* Header: Recurso + Estado */}
+                            <div className="flex items-start justify-between gap-2 mb-3">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors truncate">
+                                  {r.recurso_nombre}
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-0.5">{r.maestro_nombre}</p>
+                              </div>
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${b.bg}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${b.dot}`} />
+                                {b.label}
+                              </span>
+                            </div>
 
-                      {/* Info: Fecha, Hora, Duración */}
-                      <div className="space-y-2 mb-3 p-2.5 bg-white rounded-lg border border-gray-100">
-                        <div className="flex items-center gap-2 text-xs">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-gray-600 font-medium">
-                            {format(fechaInicio, 'dd MMM yyyy', { locale: es })}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="text-gray-600 font-medium">
-                            {format(fechaInicio, 'HH:mm', { locale: es })} – {format(fechaFin, 'HH:mm', { locale: es })}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                              d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          <span className="text-gray-600 font-medium">
-                            {duracion} min
-                          </span>
-                        </div>
-                      </div>
+                            {/* Tipo badge */}
+                            <div className="mb-3 flex items-center gap-2">
+                              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                {r.recurso_tipo}
+                              </span>
+                            </div>
 
-                      {/* Usuario info */}
-                      <div className="pt-3 border-t border-gray-100">
+                            {/* Info: Fecha, Hora, Duración */}
+                            <div className="space-y-2 mb-3 p-2.5 bg-white rounded-lg border border-gray-100">
+                              <div className="flex items-center gap-2 text-xs">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span className="text-gray-600 font-medium">
+                                  {format(fechaInicio, 'dd MMM yyyy', { locale: es })}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="text-gray-600 font-medium">
+                                  {format(fechaInicio, 'HH:mm', { locale: es })} – {format(fechaFin, 'HH:mm', { locale: es })}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                <span className="text-gray-600 font-medium">
+                                  {duracion} min
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Usuario info */}
+                            <div className="pt-3 border-t border-gray-100">
+                              <p className="text-xs text-gray-500">
+                                <span className="font-medium text-gray-700">Usuario:</span> {r.usuario_nombre}
+                              </p>
+                            </div>
+
+                            {/* Hover hint */}
+                            <div className="mt-3 text-center">
+                              <p className="text-xs text-gray-400 group-hover:text-blue-600 transition-colors">
+                                Click para más detalles →
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Paginador */}
+                    {totalPaginas > 1 && (
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                         <p className="text-xs text-gray-500">
-                          <span className="font-medium text-gray-700">Usuario:</span> {r.usuario_nombre}
+                          Mostrando <span className="font-semibold text-gray-700">{paginaActual * ITEMS_POR_PAGINA + 1}–{Math.min((paginaActual + 1) * ITEMS_POR_PAGINA, recientes.length)}</span> de <span className="font-semibold text-gray-700">{recientes.length}</span> reservas
                         </p>
-                      </div>
+                        <div className="flex items-center gap-1">
+                          {/* Anterior */}
+                          <button
+                            onClick={() => setPaginaActual(p => Math.max(0, p - 1))}
+                            disabled={paginaActual === 0}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
 
-                      {/* Hover hint */}
-                      <div className="mt-3 text-center">
-                        <p className="text-xs text-gray-400 group-hover:text-blue-600 transition-colors">
-                          Click para más detalles →
-                        </p>
+                          {/* Números de página */}
+                          {Array.from({ length: totalPaginas }, (_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setPaginaActual(i)}
+                              className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-semibold transition-all ${
+                                paginaActual === i
+                                  ? 'bg-blue-500 text-white shadow-sm'
+                                  : 'border border-gray-200 text-gray-500 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+                              }`}
+                            >
+                              {i + 1}
+                            </button>
+                          ))}
+
+                          {/* Siguiente */}
+                          <button
+                            onClick={() => setPaginaActual(p => Math.min(totalPaginas - 1, p + 1))}
+                            disabled={paginaActual === totalPaginas - 1}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )
+                    )}
+                  </div>
+                );
+              })()
           ) : (
             <CalendarioReservas reservas={todasReservas} />
           )}
