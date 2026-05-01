@@ -126,6 +126,10 @@ export default function MisReservas() {
   const [cargando, setCargando]       = useState(true);
   const [canceling, setCanceling]     = useState(false);
 
+  /* ── Paginación ── */
+  const PAGE_SIZE = 6;
+  const [pagina, setPagina] = useState(1);
+
   const load = () => {
     setCargando(true);
     // El admin usa ?own=true para ver solo sus propias reservas (no todas)
@@ -153,6 +157,10 @@ export default function MisReservas() {
       : true;
     return matchFiltro && matchBusqueda;
   });
+
+  useEffect(() => { setPagina(1); }, [filtro, busqueda]);
+  const totalPaginas = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginados    = filtered.slice((pagina - 1) * PAGE_SIZE, pagina * PAGE_SIZE);
 
   /* Estadísticas para la barra de contexto */
   const activas = reservas.filter(r => r.estado === 'confirmada').length;
@@ -360,7 +368,7 @@ export default function MisReservas() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map(r => {
+          {paginados.map(r => {
             const visual  = getEstadoVisual(r.estado);
             const dur     = formatDuracion(r.fecha_inicio, r.fecha_fin);
             const activa  = r.estado === 'confirmada';
@@ -438,6 +446,35 @@ export default function MisReservas() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Paginador ── */}
+      {!cargando && vista === 'lista' && totalPaginas > 1 && (
+        <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 mt-4">
+          <p className="text-xs text-gray-500">
+            Mostrando <span className="font-semibold text-gray-700">{(pagina - 1) * PAGE_SIZE + 1}–{Math.min(pagina * PAGE_SIZE, filtered.length)}</span> de <span className="font-semibold text-gray-700">{filtered.length}</span> reservas
+          </p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPagina(p => p - 1)} disabled={pagina === 1}
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label="Anterior">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+              <button key={n} onClick={() => setPagina(n)}
+                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${n === pagina ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>
+                {n}
+              </button>
+            ))}
+            <button onClick={() => setPagina(p => p + 1)} disabled={pagina === totalPaginas}
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label="Siguiente">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
     </div>
