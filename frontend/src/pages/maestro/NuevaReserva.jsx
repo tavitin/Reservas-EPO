@@ -47,7 +47,7 @@ function Stepper({ paso }) {
                 </svg>
               ) : s.num}
             </div>
-            <span className={`mt-1.5 text-xs font-medium whitespace-nowrap ${
+            <span className={`mt-1.5 text-[10px] sm:text-xs font-medium hidden sm:block ${
               paso === s.num ? 'text-blue-600' : paso > s.num ? 'text-emerald-600' : 'text-gray-400'
             }`}>
               {s.label}
@@ -166,7 +166,7 @@ export default function NuevaReserva() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow border border-gray-200 p-6">
+      <div className="bg-white rounded-2xl shadow border border-gray-200 p-4 sm:p-6">
         <Stepper paso={paso} />
 
         <form onSubmit={handleSubmit}>
@@ -280,7 +280,7 @@ export default function NuevaReserva() {
               {/* Duración rápida */}
               <div>
                 <p className="text-xs text-gray-500 mb-2 font-medium">Duración rápida:</p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {[1, 2, 3, 4].map(h => (
                     <button key={h} type="button" onClick={() => setDuracion(h)}
                       className="px-4 py-2 bg-gray-100 hover:bg-blue-100 hover:text-blue-700 rounded-lg text-xs font-semibold transition-colors border border-transparent hover:border-blue-200">
@@ -382,7 +382,7 @@ export default function NuevaReserva() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-xs text-gray-400 mb-0.5">Inicio</p>
                     <p className="font-semibold text-gray-800">

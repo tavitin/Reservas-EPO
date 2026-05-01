@@ -142,14 +142,14 @@ export default function Recursos() {
     <div className="space-y-5">
 
       {/* ── Cabecera ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Recursos</h1>
           <p className="text-sm text-gray-400 mt-0.5">{recursos.length} recursos · {reservas.length} reservas activas</p>
         </div>
         <button
           onClick={() => { setShowForm(true); setEditing(null); setForm(emptyForm); }}
-          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm"
+          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm self-start sm:self-auto"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

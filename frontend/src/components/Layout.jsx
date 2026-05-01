@@ -256,7 +256,7 @@ export default function Layout() {
         }`}
       />
       {/* Panel */}
-      <div className={`fixed top-0 left-0 h-full w-72 bg-white z-50 flex flex-col shadow-2xl md:hidden
+      <div className={`fixed top-0 left-0 h-full w-72 max-w-[85vw] bg-white z-50 flex flex-col shadow-2xl md:hidden
         transform transition-transform duration-300 ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
 
         {/* Header del drawer */}
@@ -328,7 +328,7 @@ export default function Layout() {
       </div>
 
       {/* ── CONTENIDO ── */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 overflow-x-hidden">
         <Outlet />
       </main>
 

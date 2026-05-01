@@ -71,10 +71,10 @@ export default function SessionTimer() {
   const percentLeft = (timeLeft / INACTIVITY_TIMEOUT) * 100;
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 transition-all ${
+    <div className={`fixed bottom-4 right-2 sm:right-4 z-50 transition-all w-[calc(100vw-1rem)] sm:w-80 max-w-sm ${
       isWarning ? 'animate-pulse' : ''
     }`}>
-      <div className={`w-80 rounded-2xl shadow-2xl p-4 ${
+      <div className={`rounded-2xl shadow-2xl p-4 ${
         isWarning
           ? 'bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-300'
           : 'bg-white border border-gray-200'

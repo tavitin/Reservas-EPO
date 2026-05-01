@@ -289,7 +289,7 @@ export default function AdminDashboard() {
     <div className="space-y-6">
 
       {/* ── Cabecera ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <p className="text-sm text-gray-400 font-medium capitalize">{greeting()} · {hoyStr}</p>
           <h1 className="text-2xl font-bold text-gray-900 mt-0.5">Panel de administración</h1>
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => load(true)}
           disabled={refreshing}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 bg-white hover:bg-blue-50 border border-gray-200 px-3 py-1.5 rounded-xl transition-all disabled:opacity-60 shadow-sm"
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 bg-white hover:bg-blue-50 border border-gray-200 px-3 py-1.5 rounded-xl transition-all disabled:opacity-60 shadow-sm self-start sm:self-auto"
         >
           <svg className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -308,24 +308,24 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Stat cards (limpias, sin gradientes) ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {CARDS.map(c => (
           <div key={c.key}
-            className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className={`w-10 h-10 ${c.bg} ${c.color} rounded-xl flex items-center justify-center mb-3`}>
+            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className={`w-9 h-9 sm:w-10 sm:h-10 ${c.bg} ${c.color} rounded-xl flex items-center justify-center mb-3`}>
               {c.icon}
             </div>
             {cargando
-              ? <Skeleton className="h-8 w-16 mb-1" />
-              : <p className="text-3xl font-bold text-gray-900">{stats[c.key]}</p>
+              ? <Skeleton className="h-7 sm:h-8 w-12 sm:w-16 mb-1" />
+              : <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats[c.key]}</p>
             }
-            <p className="text-xs text-gray-500 mt-1 font-medium">{c.label}</p>
+            <p className="text-xs text-gray-500 mt-1 font-medium leading-tight">{c.label}</p>
           </div>
         ))}
       </div>
 
       {/* ── Fila: gráfico semanal + timeline hoy ── */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 
         {/* Gráfico semanal */}
         <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
@@ -403,7 +403,7 @@ export default function AdminDashboard() {
                 return (
                   <div>
                     {/* Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-5">
                       {paginados.map(r => {
                         const b = estadoBadge(r.estado, r.fecha_fin);
                         const duracion = differenceInMinutes(new Date(r.fecha_fin), new Date(r.fecha_inicio));
@@ -598,10 +598,10 @@ export default function AdminDashboard() {
           onClose={() => setModalReserva(null)}
         >
           <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-gray-400 text-xs mb-0.5">Recurso</p>
-                <p className="font-semibold text-gray-800">{modalReserva.recurso_nombre}</p>
+                <p className="font-semibold text-gray-800 break-words">{modalReserva.recurso_nombre}</p>
               </div>
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-gray-400 text-xs mb-0.5">Tipo</p>
@@ -609,15 +609,15 @@ export default function AdminDashboard() {
               </div>
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-gray-400 text-xs mb-0.5">Maestro</p>
-                <p className="font-semibold text-gray-800">{modalReserva.maestro_nombre}</p>
+                <p className="font-semibold text-gray-800 break-words">{modalReserva.maestro_nombre}</p>
               </div>
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-gray-400 text-xs mb-0.5">Usuario</p>
-                <p className="font-semibold text-gray-800">{modalReserva.usuario_nombre}</p>
+                <p className="font-semibold text-gray-800 break-words">{modalReserva.usuario_nombre}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-gray-400 text-xs mb-0.5">Inicio</p>
                 <p className="font-semibold text-gray-800">{format(new Date(modalReserva.fecha_inicio), 'dd MMM yyyy HH:mm', { locale: es })}</p>

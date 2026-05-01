@@ -169,13 +169,13 @@ export default function MisReservas() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Mis Reservas</h1>
           <p className="text-sm text-gray-500 mt-0.5">{reservas.length} reservas en total</p>
         </div>
         <Link to={nuevaRuta}
-          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm self-start sm:self-auto">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
@@ -240,7 +240,7 @@ export default function MisReservas() {
       {detalle && (
         <Modal title="Detalle de reserva" onClose={() => setDetalle(null)}>
           <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-gray-400 text-xs mb-0.5">Recurso</p>
                 <p className="font-semibold text-gray-800">{detalle.recurso_nombre}</p>
@@ -417,7 +417,7 @@ export default function MisReservas() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end" onClick={e => e.stopPropagation()}>
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${visual.badge}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${visual.dotColor}`} />
                     {r.estado}

@@ -188,14 +188,14 @@ export default function ReservasAdmin() {
     <div className="space-y-5">
 
       {/* ── Cabecera ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Todas las reservas</h1>
           <p className="text-sm text-gray-500 mt-0.5">{reservas.length} reservas registradas</p>
         </div>
         <button
           onClick={() => exportPDF(filtered)}
-          className="flex items-center gap-1.5 text-sm bg-blue-700 hover:bg-blue-800 text-white px-3.5 py-2 rounded-xl transition-colors shadow-sm font-medium"
+          className="flex items-center gap-1.5 text-sm bg-blue-700 hover:bg-blue-800 text-white px-3.5 py-2 rounded-xl transition-colors shadow-sm font-medium self-start sm:self-auto"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -310,7 +310,7 @@ export default function ReservasAdmin() {
       {detalle && (
         <Modal title="Detalle de reserva" onClose={() => setDetalle(null)} maxW="max-w-lg">
           <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { label: 'Maestro',   val: detalle.maestro_nombre },
                 { label: 'Recurso',   val: `${detalle.recurso_nombre} (${detalle.recurso_tipo})` },
@@ -372,7 +372,7 @@ export default function ReservasAdmin() {
                   </svg>
                   Entrega registrada
                 </p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="bg-emerald-50 rounded-xl p-3">
                     <p className="text-gray-400 text-xs mb-0.5">Fecha de entrega</p>
                     <p className="font-semibold text-gray-800 text-xs">
