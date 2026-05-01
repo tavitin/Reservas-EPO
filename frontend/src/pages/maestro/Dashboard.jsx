@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInMinutes } from 'date-fns';
 import { es } from 'date-fns/locale';
 import CalendarioReservas from '../../components/CalendarioReservas';
 
@@ -13,28 +13,28 @@ function getGreeting() {
   return 'Buenas noches';
 }
 
-function StatSkeleton() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-gray-100 rounded-xl p-4 animate-pulse">
-          <div className="w-8 h-8 bg-gray-200 rounded-lg mb-2" />
-          <div className="h-6 bg-gray-200 rounded w-8 mb-1" />
-          <div className="h-3 bg-gray-200 rounded w-24" />
-        </div>
-      ))}
-    </div>
-  );
+function getGreetingIcon() {
+  const h = new Date().getHours();
+  if (h < 12) return '☀️';
+  if (h < 19) return '🌤️';
+  return '🌙';
 }
 
+/* ── Skeleton ── */
+function Skeleton({ className }) {
+  return <div className={`animate-pulse bg-gray-200 rounded-xl ${className}`} />;
+}
+
+/* ── Config de stat cards (estilo admin: white + border-t accent) ── */
 const STATS_CONFIG = [
   {
     key: 'activas',
     label: 'Reservas activas',
-    gradient: 'from-blue-500 to-blue-600',
-    iconBg: 'bg-blue-400/30',
+    border: 'border-t-blue-500',
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
     icon: (
-      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
@@ -43,10 +43,11 @@ const STATS_CONFIG = [
   {
     key: 'semana',
     label: 'Esta semana',
-    gradient: 'from-emerald-500 to-green-600',
-    iconBg: 'bg-emerald-400/30',
+    border: 'border-t-emerald-500',
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
     icon: (
-      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
@@ -55,10 +56,11 @@ const STATS_CONFIG = [
   {
     key: 'mes',
     label: 'Este mes',
-    gradient: 'from-violet-500 to-purple-600',
-    iconBg: 'bg-violet-400/30',
+    border: 'border-t-violet-500',
+    color: 'text-violet-600',
+    bg: 'bg-violet-50',
     icon: (
-      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
           d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
@@ -68,21 +70,26 @@ const STATS_CONFIG = [
 
 export default function MaestroDashboard() {
   const { user } = useAuth();
+  const isAdmin   = user?.rol === 'admin';
+  const nuevaRuta = isAdmin ? '/admin/nueva-reserva' : '/maestro/nueva-reserva';
+  const misRuta   = isAdmin ? '/admin/mis-reservas'  : '/maestro/mis-reservas';
+
   const [reservas, setReservas] = useState([]);
-  const [vista, setVista] = useState('proximas');
+  const [vista, setVista]       = useState('proximas');
   const [cargando, setCargando] = useState(true);
-  const [now, setNow] = useState(new Date());
+  const [now, setNow]           = useState(new Date());
 
   useEffect(() => {
     setCargando(true);
-    api.get('/reservas').then(r => setReservas(r.data)).catch(() => {}).finally(() => setCargando(false));
+    const params = isAdmin ? { own: 'true' } : {};
+    api.get('/reservas', { params }).then(r => setReservas(r.data)).catch(() => {}).finally(() => setCargando(false));
   }, []);
 
-  // Actualiza "now" cada minuto para que los contadores reflejen expiración en tiempo real
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(interval);
   }, []);
+
   const semanaInicio = startOfWeek(now, { weekStartsOn: 1 });
   const semanaFin    = endOfWeek(now, { weekStartsOn: 1 });
   const mesInicio    = startOfMonth(now);
@@ -97,165 +104,189 @@ export default function MaestroDashboard() {
     const f = new Date(r.fecha_inicio);
     return r.estado === 'confirmada' && f >= mesInicio && f <= mesFin;
   });
-  const proximas = activas.slice(0, 5);
+  const proximas = activas.sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio)).slice(0, 5);
 
   const statsValues = { activas: activas.length, semana: estaSemana.length, mes: esteMes.length };
 
+  const hoyStr = format(now, "EEEE d 'de' MMMM yyyy", { locale: es });
+
   return (
-    <div>
-      {/* Saludo con hora del día */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-0.5">
-          <h1 className="text-2xl font-bold text-gray-800">
+    <div className="space-y-5 sm:space-y-6">
+
+      {/* ── Cabecera ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <p className="text-xs sm:text-sm text-gray-400 font-medium capitalize">{hoyStr}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mt-0.5 flex items-center gap-2">
             {getGreeting()}, {user?.nombre?.split(' ')[0]}
+            <span className="text-xl sm:text-2xl select-none">{getGreetingIcon()}</span>
           </h1>
-          <span className="text-2xl select-none">
-            {new Date().getHours() < 12 ? '☀️' : new Date().getHours() < 19 ? '🌤️' : '🌙'}
-          </span>
         </div>
-        <p className="text-gray-500 text-sm">
-          {format(now, "EEEE d 'de' MMMM yyyy", { locale: es })} — Gestiona tus reservas de recursos escolares
-        </p>
-      </div>
-
-      {/* Stats */}
-      {cargando ? (
-        <StatSkeleton />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          {STATS_CONFIG.map(s => (
-            <div key={s.key}
-              className={`bg-gradient-to-br ${s.gradient} text-white rounded-2xl p-4 shadow-md`}>
-              <div className={`w-9 h-9 ${s.iconBg} rounded-xl flex items-center justify-center mb-3`}>
-                {s.icon}
-              </div>
-              <p className="text-2xl font-bold">{statsValues[s.key]}</p>
-              <p className="text-xs opacity-85 mt-0.5 leading-tight">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Acciones rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <Link to="/maestro/nueva-reserva"
-          className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all group">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <p className="font-semibold text-lg">Nueva Reserva</p>
-              <p className="text-sm opacity-80 mt-0.5">Reserva proyectores, laptops y más</p>
-            </div>
-            <svg className="w-6 h-6 opacity-40 group-hover:opacity-70 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Link>
-        <Link to="/maestro/mis-reservas"
-          className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-blue-200 rounded-2xl p-6 shadow hover:shadow-md transition-all group">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <p className="font-semibold text-lg text-gray-800">Mis Reservas</p>
-              <p className="text-sm text-gray-500 mt-0.5">Ver y cancelar reservas activas</p>
-            </div>
-            <svg className="w-6 h-6 text-gray-300 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
+        <Link to={nuevaRuta}
+          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm self-start sm:self-auto">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Nueva reserva
         </Link>
       </div>
 
-      {/* Vista próximas / calendario */}
-      <div className="bg-white rounded-2xl shadow p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-800">Mis próximas reservas</h2>
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-            <button onClick={() => setVista('proximas')}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${vista === 'proximas' ? 'bg-white shadow font-medium text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}>
-              Próximas
-            </button>
-            <button onClick={() => setVista('calendario')}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${vista === 'calendario' ? 'bg-white shadow font-medium text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}>
-              Calendario
-            </button>
+      {/* ── Stat cards (estilo admin: white + border-t-4 accent) ── */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
+        {STATS_CONFIG.map(s => (
+          <div key={s.key}
+            className={`bg-white rounded-2xl border border-gray-200 border-t-4 ${s.border} p-3 sm:p-5 shadow-sm hover:shadow-md transition-shadow`}>
+            <div className={`w-8 h-8 sm:w-10 sm:h-10 ${s.bg} ${s.color} rounded-xl flex items-center justify-center mb-2 sm:mb-3`}>
+              {s.icon}
+            </div>
+            {cargando
+              ? <Skeleton className="h-6 sm:h-8 w-8 sm:w-12 mb-1" />
+              : <p className={`text-xl sm:text-3xl font-extrabold leading-none ${s.color}`}>{statsValues[s.key]}</p>
+            }
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-1 font-semibold leading-tight">{s.label}</p>
           </div>
-        </div>
+        ))}
+      </div>
 
-        {vista === 'proximas' ? (
-          cargando ? (
-            <div className="space-y-3 animate-pulse">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-gray-100 rounded-xl">
-                  <div className="flex-1">
-                    <div className="h-4 bg-gray-200 rounded w-40 mb-2" />
-                    <div className="h-3 bg-gray-200 rounded w-56" />
-                  </div>
-                  <div className="h-6 bg-gray-200 rounded-full w-20" />
-                </div>
-              ))}
-            </div>
-          ) : proximas.length > 0 ? (
-            <div className="space-y-3">
-              {proximas.map(r => (
-                <div key={r.id}
-                  className="flex items-center justify-between p-4 bg-blue-50 hover:bg-blue-100/70 rounded-xl border border-blue-100 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-gray-800">
-                        {r.recurso_nombre}
-                        <span className="text-gray-400 font-normal text-xs ml-1.5">({r.recurso_tipo})</span>
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {format(new Date(r.fecha_inicio), "dd MMM yyyy HH:mm", { locale: es })}
-                        <span className="mx-1 text-gray-300">→</span>
-                        {format(new Date(r.fecha_fin), "HH:mm")}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-medium shrink-0">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    confirmada
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            /* Empty state */
-            <div className="text-center py-12">
-              <svg className="w-16 h-16 mx-auto text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      {/* ── Acciones rápidas ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <Link to={nuevaRuta}
+          className="bg-white hover:bg-blue-50/50 border border-gray-200 hover:border-blue-300 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all group">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <p className="text-gray-500 font-medium text-base">Sin reservas próximas</p>
-              <p className="text-gray-400 text-sm mt-1">¡Crea tu primera reserva para comenzar!</p>
-              <Link to="/maestro/nueva-reserva"
-                className="inline-flex items-center gap-1.5 mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Nueva Reserva
-              </Link>
             </div>
-          )
-        ) : (
-          <CalendarioReservas reservas={reservas} />
-        )}
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm sm:text-base text-gray-900">Nueva Reserva</p>
+              <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Reserva proyectores, laptops y más</p>
+            </div>
+            <svg className="w-5 h-5 text-gray-300 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </Link>
+
+        <Link to={misRuta}
+          className="bg-white hover:bg-violet-50/50 border border-gray-200 hover:border-violet-300 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all group">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 bg-violet-100 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm sm:text-base text-gray-900">Mis Reservas</p>
+              <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Ver y cancelar reservas activas</p>
+            </div>
+            <svg className="w-5 h-5 text-gray-300 group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </Link>
+      </div>
+
+      {/* ── Próximas reservas / Calendario ── */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-gray-200">
+          <h2 className="text-sm sm:text-base font-bold text-gray-800">Mis próximas reservas</h2>
+          <div className="flex gap-1 bg-gray-100 p-0.5 sm:p-1 rounded-lg">
+            {[['proximas', 'Próximas'], ['calendario', 'Cal.']].map(([v, lbl]) => (
+              <button key={v} onClick={() => setVista(v)}
+                className={`px-2.5 sm:px-3 py-1 text-xs rounded-md font-medium transition-colors whitespace-nowrap ${
+                  vista === v ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
+                }`}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-6">
+          {vista === 'proximas' ? (
+            cargando ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl">
+                    <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-56" />
+                    </div>
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            ) : proximas.length > 0 ? (
+              <div className="space-y-2.5 sm:space-y-3">
+                {proximas.map(r => {
+                  const mins = differenceInMinutes(new Date(r.fecha_fin), new Date(r.fecha_inicio));
+                  const dur = mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h${mins % 60 ? ` ${mins % 60}m` : ''}`;
+                  return (
+                    <div key={r.id}
+                      className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 hover:bg-blue-50/60 rounded-xl border border-gray-100 hover:border-blue-200 transition-all">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-800 truncate">
+                          {r.recurso_nombre}
+                          <span className="text-gray-400 font-normal text-xs ml-1">({r.recurso_tipo})</span>
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-gray-500">
+                          <span>{format(new Date(r.fecha_inicio), "dd MMM", { locale: es })}</span>
+                          <span className="text-gray-300">·</span>
+                          <span>{format(new Date(r.fecha_inicio), "HH:mm")} – {format(new Date(r.fecha_fin), "HH:mm")}</span>
+                          <span className="text-gray-300">·</span>
+                          <span className="text-blue-500 font-medium">{dur}</span>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-semibold shrink-0">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                        Activa
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {activas.length > 5 && (
+                  <Link to={misRuta}
+                    className="flex items-center justify-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 py-2 hover:bg-blue-50 rounded-xl transition-colors">
+                    Ver todas ({activas.length})
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-10 sm:py-12">
+                <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 font-semibold">Sin reservas próximas</p>
+                <p className="text-gray-400 text-sm mt-1">¡Crea tu primera reserva para comenzar!</p>
+                <Link to={nuevaRuta}
+                  className="inline-flex items-center gap-1.5 mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Nueva Reserva
+                </Link>
+              </div>
+            )
+          ) : (
+            <CalendarioReservas reservas={reservas} />
+          )}
+        </div>
       </div>
     </div>
   );
