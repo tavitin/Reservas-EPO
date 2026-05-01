@@ -149,7 +149,7 @@ function HistorialDrawer({ maestro, reservas, onClose }) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-3">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Historial de reservas ({propias.length})
           </p>
           {propias.length === 0 ? (
@@ -284,7 +284,7 @@ export default function Maestros() {
     finally { setResetting(false); }
   };
 
-  const inputClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-300 transition-colors";
+  const inputClass = "w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 bg-white transition-colors";
 
   return (
     <div className="space-y-5">
@@ -293,7 +293,7 @@ export default function Maestros() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Maestros</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
+          <p className="text-sm text-gray-500 mt-0.5">
             {maestros.filter(m => m.activo).length} activos · {maestros.length} en total
           </p>
         </div>
@@ -309,17 +309,17 @@ export default function Maestros() {
       </div>
 
       {/* ── Lista de contactos ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
 
         {/* Búsqueda dentro de la tarjeta */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-gray-200">
           <div className="relative">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
             </svg>
             <input
               type="text" placeholder="Buscar por nombre o email..."
-              className="w-full border border-gray-200 rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-300 transition-colors"
+              className="w-full border border-gray-300 rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 bg-white transition-colors"
               value={busqueda} onChange={e => setBusqueda(e.target.value)}
             />
             {busqueda && (
@@ -367,7 +367,7 @@ export default function Maestros() {
             )}
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-gray-100">
             {filtrados.map(m => {
               const resCount = resMes(m.id);
               return (
@@ -388,7 +388,7 @@ export default function Maestros() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-800 text-sm truncate">{m.nombre}</p>
-                    <p className="text-gray-400 text-xs truncate">{m.email}</p>
+                    <p className="text-gray-500 text-xs truncate">{m.email}</p>
                   </div>
 
                   {/* Stat mes */}

@@ -154,7 +154,7 @@ export default function NuevaReserva() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow p-6">
+      <div className="bg-white rounded-2xl shadow border border-gray-200 p-6">
         <Stepper paso={paso} />
 
         <form onSubmit={handleSubmit}>
@@ -178,7 +178,7 @@ export default function NuevaReserva() {
                         className={`text-left p-4 rounded-xl border-2 transition-all ${
                           String(form.recurso_id) === String(r.id)
                             ? 'border-blue-500 bg-blue-50 shadow-sm'
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/30'
                         }`}>
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${

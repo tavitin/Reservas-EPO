@@ -173,7 +173,7 @@ export default function Layout() {
   const crumbs = BREADCRUMBS[location.pathname] || [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-slate-100">
 
       {/* ── NAVBAR ── */}
       <nav className="bg-gradient-to-r from-blue-700 to-blue-800 text-white shadow-lg sticky top-0 z-40">
@@ -332,7 +332,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="text-center text-xs text-gray-400 py-3 border-t border-gray-200 bg-white">
+      <footer className="text-center text-xs text-gray-500 py-3 border-t border-gray-200 bg-white">
         © EPO 2026 — Sistema de Reservas
       </footer>
 

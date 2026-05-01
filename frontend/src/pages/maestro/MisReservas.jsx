@@ -367,7 +367,7 @@ export default function MisReservas() {
 
             return (
               <div key={r.id}
-                className={`bg-white rounded-2xl shadow hover:shadow-md border-l-4 ${visual.border} p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 transition-all`}
+                className={`bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-200 border-l-4 ${visual.border} p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-blue-50/30 transition-all`}
                 onClick={() => setDetalle(r)}>
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {/* Icono tipo recurso */}
@@ -389,7 +389,7 @@ export default function MisReservas() {
                       <span className="mx-1.5 text-gray-300">→</span>
                       {format(new Date(r.fecha_fin), 'HH:mm')}
                       {dur && (
-                        <span className="ml-2 inline-flex items-center gap-0.5 text-xs text-gray-400">
+                        <span className="ml-2 inline-flex items-center gap-0.5 text-xs text-gray-500">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -409,7 +409,7 @@ export default function MisReservas() {
                             style={{ width: `${getProgressPercent(r.fecha_inicio, r.fecha_fin)}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
                           {getProgressPercent(r.fecha_inicio, r.fecha_fin)}%
                         </span>
                       </div>

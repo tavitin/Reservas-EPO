@@ -191,7 +191,7 @@ export default function ReservasAdmin() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Todas las reservas</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{reservas.length} reservas registradas</p>
+          <p className="text-sm text-gray-500 mt-0.5">{reservas.length} reservas registradas</p>
         </div>
         <button
           onClick={() => exportPDF(filtered)}
@@ -206,7 +206,7 @@ export default function ReservasAdmin() {
       </div>
 
       {/* ── Filtros ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
         {/* Chips de estado + toggle vista */}
         <div className="flex flex-wrap gap-2 items-center p-4">
           <div className="flex gap-1.5 flex-wrap">
@@ -258,7 +258,7 @@ export default function ReservasAdmin() {
         </div>
 
         {/* Filtros avanzados — siempre visible en desktop, acordeón en mobile */}
-        <div className={`border-t border-gray-100 px-4 py-3 flex flex-wrap gap-3 items-center
+        <div className={`border-t border-gray-200 px-4 py-3 flex flex-wrap gap-3 items-center
           ${filtrosOpen ? 'block' : 'hidden md:flex'}`}>
 
           {/* Búsqueda */}
@@ -268,7 +268,7 @@ export default function ReservasAdmin() {
             </svg>
             <input
               type="text" placeholder="Buscar maestro o recurso..."
-              className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-300 transition-colors"
+              className="w-full border border-gray-300 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 bg-white transition-colors"
               value={busqueda} onChange={e => setBusqueda(e.target.value)}
             />
           </div>
@@ -277,13 +277,13 @@ export default function ReservasAdmin() {
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-gray-400">Desde</span>
             <input type="date"
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-300 transition-colors"
+              className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 bg-white transition-colors"
               value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-gray-400">Hasta</span>
             <input type="date"
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-300 transition-colors"
+              className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 bg-white transition-colors"
               value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
           </div>
 
@@ -453,10 +453,10 @@ export default function ReservasAdmin() {
       ) : (
         <>
           {/* Tabla desktop */}
-          <div className="hidden md:block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr className="text-left text-gray-400 text-xs uppercase tracking-wide">
+              <thead className="bg-gray-100 border-b border-gray-200">
+                <tr className="text-left text-gray-600 text-xs uppercase tracking-wide">
                   <th className="px-4 py-3 font-semibold">Maestro</th>
                   <th className="px-4 py-3 font-semibold">Recurso</th>
                   <th className="px-4 py-3 font-semibold">Inicio</th>
@@ -493,7 +493,7 @@ export default function ReservasAdmin() {
                       const badge = estadoBadge(r.estado);
                       return (
                         <tr key={r.id}
-                          className="border-t border-gray-50 cursor-pointer hover:bg-blue-50/50 transition-colors group"
+                          className="border-t border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors group"
                           onClick={() => setDetalle(r)}>
                           <td className="px-4 py-3.5 font-medium text-gray-800">{r.maestro_nombre}</td>
                           <td className="px-4 py-3.5">

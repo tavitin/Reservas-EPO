@@ -136,7 +136,7 @@ export default function Recursos() {
   };
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  const inputClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-300 transition-colors";
+  const inputClass = "w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors bg-white";
 
   return (
     <div className="space-y-5">
@@ -159,7 +159,7 @@ export default function Recursos() {
       </div>
 
       {/* ── Filtros ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 space-y-3">
         {/* Búsqueda */}
         <div className="relative">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +167,7 @@ export default function Recursos() {
           </svg>
           <input
             type="text" placeholder="Buscar por nombre..."
-            className={`${inputClass} pl-10 pr-10`}
+            className={`${inputClass} pl-10 pr-10 bg-white`}
             value={busqueda} onChange={e => setBusqueda(e.target.value)}
           />
           {busqueda && (

@@ -311,7 +311,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {CARDS.map(c => (
           <div key={c.key}
-            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+            className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className={`w-10 h-10 ${c.bg} ${c.color} rounded-xl flex items-center justify-center mb-3`}>
               {c.icon}
             </div>
@@ -328,10 +328,10 @@ export default function AdminDashboard() {
       <div className="grid md:grid-cols-2 gap-4">
 
         {/* Gráfico semanal */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-gray-700">Reservas esta semana</h2>
-            <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Lun – Dom</span>
+            <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Lun – Dom</span>
           </div>
           {cargando
             ? <Skeleton className="h-28" />
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Timeline del día */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-gray-700">Actividad de hoy</h2>
             <span className="flex items-center gap-1 text-[10px] text-red-500 font-medium">
@@ -356,8 +356,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Reservas recientes / Calendario ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-200">
           <h2 className="text-base font-semibold text-gray-800">Reservas recientes</h2>
           <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
             {['tabla', 'calendario'].map(v => (

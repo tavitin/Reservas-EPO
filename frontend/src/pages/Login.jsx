@@ -78,7 +78,7 @@ export default function Login() {
                 required
                 autoComplete="email"
                 className={`w-full border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  errors.email ? 'border-red-400 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+                  errors.email ? 'border-red-400 bg-red-50' : 'border-gray-300 hover:border-gray-400 bg-white'
                 }`}
                 value={form.email}
                 onChange={e => set('email', e.target.value)}
