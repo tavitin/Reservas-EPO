@@ -4,6 +4,26 @@ import { format, startOfWeek, addDays, isToday, differenceInMinutes } from 'date
 import { es } from 'date-fns/locale';
 import CalendarioReservas from '../../components/CalendarioReservas';
 
+/* ── Modal ── */
+function Modal({ title, children, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-96 overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white">
+          <h3 className="font-semibold text-lg text-gray-800">{title}</h3>
+          <button onClick={onClose} aria-label="Cerrar"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1 rounded-lg transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="px-6 py-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 /* ── helpers ── */
 function greeting() {
   const h = new Date().getHours();
@@ -13,7 +33,7 @@ function greeting() {
 }
 
 /* ── gráfico semanal limpio ── */
-function BarChart({ data }) {
+function BarChart({ data, onDayClick }) {
   const max = Math.max(...data.map(d => d.value), 1);
   const hoy = new Date().getDay(); // 0=dom,1=lun…
   return (
@@ -22,12 +42,20 @@ function BarChart({ data }) {
         // el index 0 = lunes (i+1 en .getDay())
         const esDia = (i + 1) % 7 === hoy;
         return (
-          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+          <button
+            key={i}
+            onClick={() => onDayClick?.(i)}
+            disabled={d.value === 0}
+            title={d.value > 0 ? `${d.value} reservas - Click para ver detalles` : 'Sin reservas'}
+            className="flex-1 flex flex-col items-center gap-1 group disabled:cursor-default hover:disabled:opacity-50"
+          >
             <span className={`text-[11px] font-semibold ${esDia ? 'text-blue-600' : 'text-gray-400'}`}>
               {d.value > 0 ? d.value : ''}
             </span>
             <div
-              className={`w-full rounded-t-lg transition-all duration-500 ${esDia ? 'bg-blue-500' : 'bg-blue-200'}`}
+              className={`w-full rounded-t-lg transition-all duration-500 ${
+                esDia ? 'bg-blue-500' : 'bg-blue-200'
+              } ${d.value > 0 ? 'hover:opacity-80 cursor-pointer' : 'opacity-50'}`}
               style={{
                 height: `${(d.value / max) * 88}%`,
                 minHeight: d.value ? '4px' : '2px',
@@ -37,7 +65,7 @@ function BarChart({ data }) {
             <span className={`text-[10px] capitalize font-medium ${esDia ? 'text-blue-600' : 'text-gray-400'}`}>
               {d.label}
             </span>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -45,7 +73,7 @@ function BarChart({ data }) {
 }
 
 /* ── timeline del día ── */
-function TimelineHoy({ reservas }) {
+function TimelineHoy({ reservas, onReservaClick }) {
   const HORA_INICIO = 7;
   const HORA_FIN    = 21;
   const TOTAL_MIN   = (HORA_FIN - HORA_INICIO) * 60;
@@ -93,10 +121,11 @@ function TimelineHoy({ reservas }) {
               const right = toPercent(r.fecha_fin);
               const width = Math.max(right - left, 1);
               return (
-                <div
+                <button
                   key={r.id}
-                  title={`${r.maestro_nombre} — ${r.recurso_nombre}`}
-                  className={`absolute top-1 bottom-1 rounded-lg opacity-80 hover:opacity-100 transition-opacity cursor-default ${COLORS[idx % COLORS.length]}`}
+                  onClick={() => onReservaClick?.(r)}
+                  title={`${r.maestro_nombre} — ${r.recurso_nombre}\nClick para ver detalles`}
+                  className={`absolute top-1 bottom-1 rounded-lg opacity-80 hover:opacity-100 transition-opacity cursor-pointer ${COLORS[idx % COLORS.length]}`}
                   style={{ left: `${left}%`, width: `${width}%` }}
                 />
               );
@@ -202,6 +231,8 @@ export default function AdminDashboard() {
   const [vista,         setVista]         = useState('tabla');
   const [cargando,      setCargando]      = useState(true);
   const [refreshing,    setRefreshing]    = useState(false);
+  const [modalDia,      setModalDia]      = useState(null);
+  const [modalReserva,  setModalReserva]  = useState(null);
 
   const load = useCallback((isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -237,6 +268,20 @@ export default function AdminDashboard() {
   useEffect(() => { load(); }, [load]);
 
   const hoyStr = format(new Date(), "EEEE d 'de' MMMM", { locale: es });
+
+  // Handlers para modales
+  const handleClickDia = (dayIndex) => {
+    const lunes = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const diaSeleccionado = addDays(lunes, dayIndex);
+    const reservasDia = todasReservas.filter(r =>
+      new Date(r.fecha_inicio).toDateString() === diaSeleccionado.toDateString()
+    );
+    setModalDia({ dia: diaSeleccionado, reservas: reservasDia });
+  };
+
+  const handleClickReserva = (reserva) => {
+    setModalReserva(reserva);
+  };
 
   return (
     <div className="space-y-6">
@@ -288,7 +333,7 @@ export default function AdminDashboard() {
           </div>
           {cargando
             ? <Skeleton className="h-28" />
-            : <BarChart data={semanaData} />
+            : <BarChart data={semanaData} onDayClick={handleClickDia} />
           }
         </div>
 
@@ -303,7 +348,7 @@ export default function AdminDashboard() {
           </div>
           {cargando
             ? <Skeleton className="h-28" />
-            : <TimelineHoy reservas={todasReservas} />
+            : <TimelineHoy reservas={todasReservas} onReservaClick={handleClickReserva} />
           }
         </div>
       </div>
@@ -387,6 +432,133 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* ── Modal: Reservas del día ── */}
+      {modalDia && (
+        <Modal
+          title={`Reservas del ${format(modalDia.dia, 'EEEE d \'de\' MMMM', { locale: es })}`}
+          onClose={() => setModalDia(null)}
+        >
+          {modalDia.reservas.length === 0 ? (
+            <div className="text-center py-8">
+              <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <p className="text-gray-500 font-medium">No hay reservas para este día</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {modalDia.reservas.map(r => (
+                <div key={r.id} className="p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-blue-50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-semibold text-gray-800">{r.recurso_nombre}</p>
+                      <p className="text-sm text-gray-600">{r.maestro_nombre}</p>
+                    </div>
+                    <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                      {r.recurso_tipo}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <p>
+                      <strong>Inicio:</strong> {format(new Date(r.fecha_inicio), 'HH:mm')}
+                    </p>
+                    <p>
+                      <strong>Fin:</strong> {format(new Date(r.fecha_fin), 'HH:mm')}
+                    </p>
+                    <p>
+                      <strong>Duración:</strong> {differenceInMinutes(new Date(r.fecha_fin), new Date(r.fecha_inicio))} min
+                    </p>
+                    {r.notas && (
+                      <p>
+                        <strong>Notas:</strong> {r.notas}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Modal>
+      )}
+
+      {/* ── Modal: Detalle de reserva ── */}
+      {modalReserva && (
+        <Modal
+          title={`Detalle de reserva`}
+          onClose={() => setModalReserva(null)}
+        >
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-gray-400 text-xs mb-0.5">Recurso</p>
+                <p className="font-semibold text-gray-800">{modalReserva.recurso_nombre}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-gray-400 text-xs mb-0.5">Tipo</p>
+                <p className="font-semibold text-gray-800">{modalReserva.recurso_tipo}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-gray-400 text-xs mb-0.5">Maestro</p>
+                <p className="font-semibold text-gray-800">{modalReserva.maestro_nombre}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-gray-400 text-xs mb-0.5">Usuario</p>
+                <p className="font-semibold text-gray-800">{modalReserva.usuario_nombre}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-gray-400 text-xs mb-0.5">Inicio</p>
+                <p className="font-semibold text-gray-800">{format(new Date(modalReserva.fecha_inicio), 'dd MMM yyyy HH:mm', { locale: es })}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-gray-400 text-xs mb-0.5">Fin</p>
+                <p className="font-semibold text-gray-800">{format(new Date(modalReserva.fecha_fin), 'dd MMM yyyy HH:mm', { locale: es })}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-xl p-3">
+              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>
+                Duración: <strong>{differenceInMinutes(new Date(modalReserva.fecha_fin), new Date(modalReserva.fecha_inicio))} minutos</strong>
+              </span>
+            </div>
+
+            <div>
+              <p className="text-gray-400 text-xs mb-1">Estado</p>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                modalReserva.estado === 'cancelada'
+                  ? 'bg-red-100 text-red-700'
+                  : modalReserva.estado === 'completada'
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'bg-emerald-100 text-emerald-700'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  modalReserva.estado === 'cancelada'
+                    ? 'bg-red-400'
+                    : modalReserva.estado === 'completada'
+                    ? 'bg-blue-400'
+                    : 'bg-emerald-500'
+                }`} />
+                {modalReserva.estado}
+              </span>
+            </div>
+
+            {modalReserva.notas && (
+              <div className="pt-2 border-t">
+                <p className="text-gray-400 text-xs mb-1">Notas</p>
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 rounded-xl p-3 text-xs">{modalReserva.notas}</p>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
