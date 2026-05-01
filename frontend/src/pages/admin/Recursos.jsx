@@ -135,6 +135,16 @@ export default function Recursos() {
     finally { setConfirmDel(null); }
   };
 
+  /* ── Paginación ── */
+  const PAGE_SIZE = 6;
+  const [pagina, setPagina] = useState(1);
+
+  // Reset a página 1 cuando cambian los filtros
+  useEffect(() => { setPagina(1); }, [busqueda, tipoFiltro]);
+
+  const totalPaginas  = Math.ceil(filtrados.length / PAGE_SIZE);
+  const paginados     = filtrados.slice((pagina - 1) * PAGE_SIZE, pagina * PAGE_SIZE);
+
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
   const inputClass = "w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors bg-white";
 
@@ -316,7 +326,7 @@ export default function Recursos() {
             )}
           </div>
         ) : (
-          filtrados.map(r => {
+          paginados.map(r => {
             const activas = reservasActivas(r.id);
             const style   = tipoStyle(r.tipo);
             return (
@@ -390,6 +400,50 @@ export default function Recursos() {
           })
         )}
       </div>
+
+      {/* ── Paginador ── */}
+      {!cargando && totalPaginas > 1 && (
+        <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3">
+          <p className="text-xs text-gray-500">
+            Mostrando <span className="font-semibold text-gray-700">{(pagina - 1) * PAGE_SIZE + 1}–{Math.min(pagina * PAGE_SIZE, filtrados.length)}</span> de <span className="font-semibold text-gray-700">{filtrados.length}</span> recursos
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPagina(p => p - 1)} disabled={pagina === 1}
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="Página anterior"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+              <button
+                key={n}
+                onClick={() => setPagina(n)}
+                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
+                  n === pagina
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setPagina(p => p + 1)} disabled={pagina === totalPaginas}
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="Página siguiente"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
