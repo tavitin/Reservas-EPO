@@ -1,23 +1,20 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL         : import.meta.env.VITE_API_URL || '/api',
+  withCredentials : true,   // envía la cookie httpOnly automáticamente
   ...(import.meta.env.VITE_NGROK_SKIP && {
     headers: { 'ngrok-skip-browser-warning': 'true' },
   }),
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// Sin interceptor de token — el navegador gestiona la cookie httpOnly
 
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('token');
+      // Limpiar solo el usuario del estado local (el token ya no está en localStorage)
       localStorage.removeItem('user');
       window.location.href = '/login';
     }

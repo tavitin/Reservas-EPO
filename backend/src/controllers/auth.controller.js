@@ -2,6 +2,16 @@ const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
 const { pool } = require('../config/db');
 
+const isProd = process.env.NODE_ENV === 'production';
+
+const COOKIE_OPTS = {
+  httpOnly : true,                          // inaccesible desde JS (protege contra XSS)
+  secure   : isProd,                        // solo HTTPS en producción
+  sameSite : isProd ? 'none' : 'lax',       // cross-origin en prod (Railway), lax en dev
+  maxAge   : 8 * 60 * 60 * 1000,           // 8 horas en ms
+  path     : '/',
+};
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -16,16 +26,23 @@ exports.login = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password_hash)))
       return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-    const token = jwt.sign(
-      { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol },
-      process.env.JWT_SECRET,
-      { expiresIn: '8h' }
-    );
-    res.json({ token, user: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol } });
+    const payload = { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol };
+    const token   = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
+
+    // Token en cookie httpOnly — no viaja en el body
+    res.cookie('auth_token', token, COOKIE_OPTS);
+
+    // Solo devolvemos datos del usuario (sin el token)
+    res.json({ user: payload });
   } catch (err) {
-    console.error(err);
+    console.error('[auth.login]', err.message);
     res.status(500).json({ error: 'Error interno' });
   }
+};
+
+exports.logout = (_req, res) => {
+  res.clearCookie('auth_token', { ...COOKIE_OPTS, maxAge: 0 });
+  res.json({ ok: true });
 };
 
 exports.me = async (req, res) => {

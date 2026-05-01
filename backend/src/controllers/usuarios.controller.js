@@ -1,6 +1,18 @@
 const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
 
+/**
+ * Valida complejidad de contraseña.
+ * Requiere: mínimo 8 chars, al menos 1 mayúscula y 1 número.
+ * Retorna null si es válida, o un mensaje de error.
+ */
+function validarPassword(pwd) {
+  if (!pwd || pwd.length < 8)      return 'La contraseña debe tener al menos 8 caracteres';
+  if (!/[A-Z]/.test(pwd))          return 'La contraseña debe incluir al menos una letra mayúscula';
+  if (!/[0-9]/.test(pwd))          return 'La contraseña debe incluir al menos un número';
+  return null;
+}
+
 exports.getAll = async (_req, res) => {
   try {
     const { rows } = await pool.query(
@@ -19,8 +31,8 @@ exports.create = async (req, res) => {
       return res.status(400).json({ error: 'Nombre, email y contraseña son requeridos' });
     if (!['maestro', 'admin'].includes(rol))
       return res.status(400).json({ error: 'Rol inválido' });
-    if (password.length < 8)
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+    const errPwd = validarPassword(password);
+    if (errPwd) return res.status(400).json({ error: errPwd });
 
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
@@ -67,8 +79,8 @@ exports.resetPassword = async (req, res) => {
     const { password_nuevo } = req.body;
     if (!password_nuevo)
       return res.status(400).json({ error: 'La nueva contraseña es requerida' });
-    if (password_nuevo.length < 8)
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+    const errPwd = validarPassword(password_nuevo);
+    if (errPwd) return res.status(400).json({ error: errPwd });
 
     // Verificar que el target no es otro admin (un admin no puede resetear a otro admin)
     const { rows: target } = await pool.query('SELECT rol FROM usuarios WHERE id = $1', [req.params.id]);
@@ -114,6 +126,8 @@ exports.changePassword = async (req, res) => {
     const { password_actual, password_nuevo } = req.body;
     if (!password_actual || !password_nuevo)
       return res.status(400).json({ error: 'Ambas contraseñas son requeridas' });
+    const errPwd = validarPassword(password_nuevo);
+    if (errPwd) return res.status(400).json({ error: errPwd });
 
     const { rows } = await pool.query('SELECT password_hash FROM usuarios WHERE id = $1', [req.user.id]);
     if (!rows[0]) return res.status(404).json({ error: 'Usuario no encontrado' });

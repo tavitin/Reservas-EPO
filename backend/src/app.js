@@ -1,11 +1,12 @@
 require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const { pool } = require('./config/db');
+const express      = require('express');
+const cors         = require('cors');
+const helmet       = require('helmet');
+const rateLimit    = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
+const { pool }     = require('./config/db');
 const { seedAdmin } = require('./config/seed');
-const fs = require('fs');
+const fs   = require('fs');
 const path = require('path');
 
 const authRoutes     = require('./routes/auth.routes');
@@ -15,12 +16,35 @@ const usuariosRoutes = require('./routes/usuarios.routes');
 
 const app = express();
 
+// ── Validación de secrets al arrancar ────────────────────────────────────────
+const WEAK_SECRETS = [
+  'dev_secret_reserva_epo_2024_no_usar_en_produccion',
+  'secret', 'changeme', 'password', '12345', 'jwt_secret',
+  'REEMPLAZA_CON_RESULTADO_DE__openssl_rand_-hex_32',
+];
+if (!process.env.JWT_SECRET || WEAK_SECRETS.includes(process.env.JWT_SECRET)) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('❌  FATAL: JWT_SECRET no configurado o usa valor por defecto. Genera uno con: openssl rand -hex 32');
+    process.exit(1);
+  } else {
+    console.warn('⚠️  ADVERTENCIA: JWT_SECRET usa valor débil. Configura uno fuerte antes de ir a producción.');
+  }
+}
+if (process.env.NODE_ENV === 'production' && (!process.env.CORS_ORIGIN || process.env.CORS_ORIGIN === 'http://localhost:3000')) {
+  console.error('❌  FATAL: CORS_ORIGIN no configurado para producción. Define la URL exacta del frontend.');
+  process.exit(1);
+}
+
 // Confiar en el proxy de Railway (necesario para que express-rate-limit identifique IPs correctamente)
 app.set('trust proxy', 1);
 
 app.use(helmet());
-app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
-app.use(express.json({ limit: '50kb' }));
+app.use(cors({
+  origin     : process.env.CORS_ORIGIN || 'http://localhost:3000',
+  credentials: true,   // necesario para que el navegador envíe/reciba cookies
+}));
+app.use(cookieParser());
+app.use(express.json({ limit: '200kb' })); // 200 kb para soportar firma_base64
 
 // Rate limiting global
 const globalLimiter = rateLimit({

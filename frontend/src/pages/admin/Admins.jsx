@@ -86,7 +86,7 @@ export default function Admins() {
     setSaving(true);
     try {
       await api.post('/usuarios', { ...form, rol: 'admin' });
-      toast.success(`Administrador creado — contraseña temporal: ${form.password}`, { duration: 6000 });
+      toast.success('Administrador creado. Comparte la contraseña temporal de forma segura (no por pantalla).', { duration: 5000 });
       setForm({ nombre: '', email: '', password: '' });
       setShowForm(false);
       load();

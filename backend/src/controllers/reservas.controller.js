@@ -91,6 +91,8 @@ exports.entregar = async (req, res) => {
   try {
     const { firma_base64, comentario_entrega } = req.body;
     if (!firma_base64) return res.status(400).json({ error: 'La firma es requerida para registrar la entrega' });
+    // Limitar tamaño de la firma (~150 KB en base64)
+    if (firma_base64.length > 200000) return res.status(400).json({ error: 'La firma es demasiado grande (máx 150 KB)' });
 
     const { rows: check } = await pool.query(
       'SELECT id, estado FROM reservas WHERE id = $1',

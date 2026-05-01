@@ -250,7 +250,7 @@ export default function Maestros() {
     setSaving(true);
     try {
       await api.post('/usuarios', { ...form, rol: 'maestro' });
-      toast.success(`Maestro creado — contraseña temporal: ${form.password}`, { duration: 6000 });
+      toast.success('Maestro creado. Comparte la contraseña temporal de forma segura (no por pantalla).', { duration: 5000 });
       setForm({ nombre: '', email: '', password: '' });
       setShowForm(false);
       load();
