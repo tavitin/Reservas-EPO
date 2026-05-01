@@ -1,6 +1,6 @@
 # Reserva EPO — Registro de Tareas
 
-> Última actualización: 2026-05-01  
+> Última actualización: 2026-05-01 · 19:45  
 > Producción: https://frontend-production-d92a.up.railway.app
 
 ---
@@ -66,6 +66,7 @@
 | 34 | Admin puede crear reservas propias | `92870ab` | Flujo de nueva reserva disponible para rol admin |
 | 35 | Tests de integración (53/53 passing) | `b264e1e` | Suite completa de pruebas backend |
 | 36 | UI/UX overhaul P3 — barra de stats admin, progress bars | `6ec1e69` | Tiempo restante visual en reservas activas |
+| 37 | Redesign página **Login** — responsive + border accent | `2128251` | Breakpoints sm: para padding/tipografía/spacing, border-t-4 azul, inputs border-2, botón sólido |
 
 ---
 
@@ -106,7 +107,7 @@
 ## 📊 Resumen
 
 ```
-Completadas : 36 tareas
+Completadas : 37 tareas
 Pendientes  : 15 tareas  (4 alta · 5 media · 6 baja)
 ```
 
@@ -133,4 +134,6 @@ frontend/
   src/pages/admin/ReservasAdmin.jsx   ← paginación
   src/pages/admin/Maestros.jsx        ← paginación (archivo legacy, no en router)
   src/pages/maestro/MisReservas.jsx   ← redesign completo + paginación
+  src/pages/maestro/Dashboard.jsx     ← redesign completo (stats grid + CTA)
+  src/pages/Login.jsx                 ← responsive design + border accent
 ```
