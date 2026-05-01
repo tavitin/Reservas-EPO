@@ -97,6 +97,7 @@ export default function CalendarioReservas({ reservas = [], onDiaClick }) {
           const key        = format(dia, 'yyyy-MM-dd');
           const rDia       = reservasPorDia[key] || [];
           const confirmadas = rDia.filter(r => r.estado === 'confirmada').length;
+          const completadas = rDia.filter(r => r.estado === 'completada').length;
           const canceladas  = rDia.filter(r => r.estado === 'cancelada').length;
           const delMes     = isSameMonth(dia, mes);
           const hoy        = isToday(dia);
@@ -127,14 +128,21 @@ export default function CalendarioReservas({ reservas = [], onDiaClick }) {
               {/* Puntos indicadores de reservas */}
               {delMes && rDia.length > 0 && (
                 <div className="flex flex-wrap justify-center gap-0.5">
-                  {/* Puntos confirmadas */}
+                  {/* Confirmadas — verde */}
                   {Array.from({ length: Math.min(confirmadas, 3) }).map((_, idx) => (
                     <span key={`c${idx}`} className="w-1.5 h-1.5 rounded-full bg-emerald-500" title={`${confirmadas} confirmada${confirmadas > 1 ? 's' : ''}`} />
                   ))}
                   {confirmadas > 3 && (
                     <span className="text-[9px] text-emerald-600 font-bold">+{confirmadas - 3}</span>
                   )}
-                  {/* Puntos canceladas */}
+                  {/* Completadas — azul */}
+                  {Array.from({ length: Math.min(completadas, 3) }).map((_, idx) => (
+                    <span key={`d${idx}`} className="w-1.5 h-1.5 rounded-full bg-blue-400" title={`${completadas} completada${completadas > 1 ? 's' : ''}`} />
+                  ))}
+                  {completadas > 3 && (
+                    <span className="text-[9px] text-blue-600 font-bold">+{completadas - 3}</span>
+                  )}
+                  {/* Canceladas — rojo */}
                   {Array.from({ length: Math.min(canceladas, 2) }).map((_, idx) => (
                     <span key={`x${idx}`} className="w-1.5 h-1.5 rounded-full bg-red-400" title={`${canceladas} cancelada${canceladas > 1 ? 's' : ''}`} />
                   ))}
@@ -146,10 +154,14 @@ export default function CalendarioReservas({ reservas = [], onDiaClick }) {
       </div>
 
       {/* Leyenda */}
-      <div className="flex items-center gap-4 mt-3 px-1">
+      <div className="flex flex-wrap items-center gap-3 mt-3 px-1">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
           <span className="text-xs text-gray-500">Confirmada</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+          <span className="text-xs text-gray-500">Completada</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
@@ -179,39 +191,46 @@ export default function CalendarioReservas({ reservas = [], onDiaClick }) {
             </button>
           </div>
           <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-            {reservasDia.map(r => (
-              <div key={r.id}
-                className={`flex items-start gap-3 p-3 rounded-xl text-sm border ${
-                  r.estado === 'confirmada'
-                    ? 'bg-emerald-50 border-emerald-100'
-                    : 'bg-red-50 border-red-100'
-                }`}>
-                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                  r.estado === 'confirmada' ? 'bg-emerald-500' : 'bg-red-400'
-                }`} />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 truncate">{r.recurso_nombre}</p>
-                  {r.maestro_nombre && (
-                    <p className="text-xs text-gray-500 truncate">{r.maestro_nombre}</p>
-                  )}
-                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {format(new Date(r.fecha_inicio), 'HH:mm')} — {format(new Date(r.fecha_fin), 'HH:mm')}
-                  </p>
-                  {r.notas && <p className="text-xs text-gray-400 truncate mt-0.5">{r.notas}</p>}
+            {reservasDia.map(r => {
+              const esConfirmada = r.estado === 'confirmada';
+              const esCompletada = r.estado === 'completada';
+              const esCancelada  = r.estado === 'cancelada';
+              return (
+                <div key={r.id}
+                  className={`flex items-start gap-3 p-3 rounded-xl text-sm border ${
+                    esConfirmada ? 'bg-emerald-50 border-emerald-100' :
+                    esCompletada ? 'bg-blue-50 border-blue-100' :
+                                   'bg-red-50 border-red-100'
+                  }`}>
+                  <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                    esConfirmada ? 'bg-emerald-500' :
+                    esCompletada ? 'bg-blue-400' :
+                                   'bg-red-400'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-800 truncate">{r.recurso_nombre}</p>
+                    {r.maestro_nombre && (
+                      <p className="text-xs text-gray-500 truncate">{r.maestro_nombre}</p>
+                    )}
+                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {format(new Date(r.fecha_inicio), 'HH:mm')} — {format(new Date(r.fecha_fin), 'HH:mm')}
+                    </p>
+                    {r.notas && <p className="text-xs text-gray-400 truncate mt-0.5">{r.notas}</p>}
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
+                    esConfirmada ? 'bg-emerald-100 text-emerald-700' :
+                    esCompletada ? 'bg-blue-100 text-blue-700' :
+                                   'bg-red-100 text-red-600'
+                  }`}>
+                    {r.estado}
+                  </span>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
-                  r.estado === 'confirmada'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-red-100 text-red-600'
-                }`}>
-                  {r.estado}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
