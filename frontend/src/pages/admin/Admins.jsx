@@ -135,10 +135,11 @@ export default function Admins() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      {/* Header con gradiente */}
+      <div className="mb-6 bg-gradient-to-r from-violet-50 to-violet-100/50 border-b border-violet-200 rounded-2xl px-6 py-4 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Administradores</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{admins.length} administradores registrados</p>
+          <h1 className="text-2xl font-bold text-violet-900">Administradores</h1>
+          <p className="text-sm text-violet-700 mt-0.5">{admins.length} administradores registrados</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -348,10 +349,13 @@ export default function Admins() {
                         <div className={`w-9 h-9 ${avatarColor(a.nombre)} rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0`}>
                           {getInitials(a.nombre)}
                         </div>
-                        <div>
+                        <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-800">{a.nombre}</span>
                           {a.id === me?.id && (
-                            <span className="ml-2 text-xs text-violet-500">(tú)</span>
+                            <span className="inline-flex items-center gap-0.5 bg-violet-100 text-violet-700 text-xs font-semibold px-2 py-1 rounded-full">
+                              <span>★</span>
+                              <span>Tu cuenta</span>
+                            </span>
                           )}
                         </div>
                       </div>
@@ -377,7 +381,14 @@ export default function Admins() {
                           className="text-xs text-amber-600 hover:text-amber-800 hover:bg-amber-50 px-2.5 py-1 rounded-lg transition-colors font-medium">
                           Contraseña
                         </button>
-                        {a.id !== me?.id && (
+                        {a.id === me?.id ? (
+                          <button
+                            disabled
+                            title="No puedes desactivar tu propia cuenta"
+                            className="text-xs px-2.5 py-1 rounded-lg transition-colors font-medium text-gray-400 cursor-not-allowed">
+                            {a.activo ? 'Desactivar' : 'Activar'}
+                          </button>
+                        ) : (
                           <button
                             onClick={() => setConfirmToggle({ id: a.id, activo: a.activo, nombre: a.nombre })}
                             className={`text-xs px-2.5 py-1 rounded-lg transition-colors font-medium ${

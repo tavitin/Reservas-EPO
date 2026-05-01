@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { format, differenceInMinutes } from 'date-fns';
+import { format, differenceInMinutes, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import CalendarioReservas from '../../components/CalendarioReservas';
 
@@ -76,6 +76,20 @@ function getEstadoVisual(estado) {
   return                               { border: 'border-l-emerald-400', badge: 'bg-emerald-100 text-emerald-700', dotColor: 'bg-emerald-500' };
 }
 
+/* Calcula el porcentaje de duración transcurrida de una reserva activa */
+function getProgressPercent(fechaInicio, fechaFin) {
+  const now = new Date();
+  const inicio = new Date(fechaInicio);
+  const fin = new Date(fechaFin);
+
+  if (now < inicio) return 0; // No ha comenzado
+  if (now > fin) return 100; // Ya finalizó
+
+  const total = fin.getTime() - inicio.getTime();
+  const elapsed = now.getTime() - inicio.getTime();
+  return Math.round((elapsed / total) * 100);
+}
+
 function CardSkeleton() {
   return (
     <div className="space-y-3 animate-pulse">
@@ -140,6 +154,19 @@ export default function MisReservas() {
     return matchFiltro && matchBusqueda;
   });
 
+  /* Estadísticas para la barra de contexto */
+  const activas = reservas.filter(r => r.estado === 'confirmada').length;
+  const thisWeek = (() => {
+    const now = new Date();
+    const semanaInicio = startOfWeek(now, { locale: es, weekStartsOn: 1 });
+    const semanaFin = endOfWeek(now, { locale: es, weekStartsOn: 1 });
+    return reservas.filter(r =>
+      r.estado === 'confirmada' &&
+      isWithinInterval(new Date(r.fecha_inicio), { start: semanaInicio, end: semanaFin })
+    ).length;
+  })();
+  const historicas = reservas.filter(r => r.estado === 'completada' || r.estado === 'cancelada').length;
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -155,6 +182,24 @@ export default function MisReservas() {
           Nueva reserva
         </Link>
       </div>
+
+      {/* Barra de contexto de estadísticas para admin */}
+      {isAdmin && (
+        <div className="mb-6 flex flex-wrap gap-3">
+          <div className="flex-1 min-w-max bg-gradient-to-r from-emerald-50 to-emerald-100/50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-2">
+            <span className="text-2xl font-bold text-emerald-600">{activas}</span>
+            <span className="text-sm text-emerald-700 font-medium">activas</span>
+          </div>
+          <div className="flex-1 min-w-max bg-gradient-to-r from-blue-50 to-blue-100/50 border border-blue-200 rounded-xl px-4 py-3 flex items-center gap-2">
+            <span className="text-2xl font-bold text-blue-600">{thisWeek}</span>
+            <span className="text-sm text-blue-700 font-medium">esta semana</span>
+          </div>
+          <div className="flex-1 min-w-max bg-gradient-to-r from-slate-50 to-slate-100/50 border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-2">
+            <span className="text-2xl font-bold text-slate-600">{historicas}</span>
+            <span className="text-sm text-slate-700 font-medium">históricas</span>
+          </div>
+        </div>
+      )}
 
       {/* Filtros y vista */}
       <div className="flex flex-wrap gap-2 mb-4 items-center">
@@ -354,6 +399,21 @@ export default function MisReservas() {
                       )}
                     </p>
                     {r.notas && <p className="text-xs text-gray-400 mt-0.5 truncate">{r.notas}</p>}
+
+                    {/* Barra de progreso para reservas activas */}
+                    {activa && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-1000"
+                            style={{ width: `${getProgressPercent(r.fecha_inicio, r.fecha_fin)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                          {getProgressPercent(r.fecha_inicio, r.fecha_fin)}%
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
