@@ -352,12 +352,14 @@ export default function Usuarios() {
     {
       label: 'Maestros',
       value: maestros.length,
-      sub: `${maestros.filter(m => m.activo).length} activos`,
-      bg: 'bg-blue-50',
-      text: 'text-blue-700',
-      sub_text: 'text-blue-500',
+      sub: `${maestros.filter(m => m.activo).length} de ${maestros.length} activos`,
+      iconBg: 'bg-blue-100',
+      accent: 'border-t-blue-500',
+      num: 'text-blue-700',
+      lbl: 'text-gray-600',
+      sub_text: 'text-blue-400',
       icon: (
-        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
             d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m-4-3.268A7 7 0 0112 20a7 7 0 014-3.268" />
         </svg>
@@ -366,12 +368,14 @@ export default function Usuarios() {
     {
       label: 'Administradores',
       value: admins.length,
-      sub: `${admins.filter(a => a.activo).length} activos`,
-      bg: 'bg-violet-50',
-      text: 'text-violet-700',
-      sub_text: 'text-violet-500',
+      sub: `${admins.filter(a => a.activo).length} de ${admins.length} activos`,
+      iconBg: 'bg-violet-100',
+      accent: 'border-t-violet-500',
+      num: 'text-violet-700',
+      lbl: 'text-gray-600',
+      sub_text: 'text-violet-400',
       icon: (
-        <svg className="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
             d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
@@ -381,11 +385,13 @@ export default function Usuarios() {
       label: 'Activos',
       value: totalActivos,
       sub: 'con acceso al sistema',
-      bg: 'bg-emerald-50',
-      text: 'text-emerald-700',
-      sub_text: 'text-emerald-500',
+      iconBg: 'bg-emerald-100',
+      accent: 'border-t-emerald-500',
+      num: 'text-emerald-700',
+      lbl: 'text-gray-600',
+      sub_text: 'text-emerald-400',
       icon: (
-        <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -394,12 +400,14 @@ export default function Usuarios() {
     {
       label: 'Inactivos',
       value: totalInact,
-      sub: 'sin acceso',
-      bg: totalInact > 0 ? 'bg-red-50' : 'bg-gray-50',
-      text: totalInact > 0 ? 'text-red-700' : 'text-gray-500',
+      sub: 'sin acceso al sistema',
+      iconBg: totalInact > 0 ? 'bg-red-100' : 'bg-gray-100',
+      accent: totalInact > 0 ? 'border-t-red-400' : 'border-t-gray-300',
+      num: totalInact > 0 ? 'text-red-600' : 'text-gray-400',
+      lbl: 'text-gray-600',
       sub_text: totalInact > 0 ? 'text-red-400' : 'text-gray-400',
       icon: (
-        <svg className={`w-5 h-5 ${totalInact > 0 ? 'text-red-400' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className={`w-6 h-6 ${totalInact > 0 ? 'text-red-500' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
             d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
         </svg>
@@ -480,12 +488,19 @@ export default function Usuarios() {
       {!cargando && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {STATS.map(s => (
-            <div key={s.label} className={`${s.bg} rounded-2xl p-4 flex items-center gap-3`}>
-              <div className="shrink-0">{s.icon}</div>
-              <div className="min-w-0">
-                <p className={`text-xl font-bold leading-none ${s.text}`}>{s.value}</p>
-                <p className={`text-xs font-semibold mt-0.5 ${s.text}`}>{s.label}</p>
-                <p className={`text-[10px] mt-0.5 truncate ${s.sub_text}`}>{s.sub}</p>
+            <div key={s.label}
+              className={`bg-white rounded-2xl border border-gray-200 shadow-sm border-t-4 ${s.accent} p-4 flex flex-col gap-3 hover:shadow-md transition-shadow`}>
+              {/* Icono + número en fila */}
+              <div className="flex items-start justify-between">
+                <div className={`w-10 h-10 ${s.iconBg} rounded-xl flex items-center justify-center shrink-0`}>
+                  {s.icon}
+                </div>
+                <span className={`text-3xl font-extrabold leading-none ${s.num}`}>{s.value}</span>
+              </div>
+              {/* Etiqueta + sub */}
+              <div>
+                <p className={`text-sm font-semibold ${s.lbl}`}>{s.label}</p>
+                <p className={`text-xs mt-0.5 ${s.sub_text}`}>{s.sub}</p>
               </div>
             </div>
           ))}
