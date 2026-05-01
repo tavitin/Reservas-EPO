@@ -394,37 +394,87 @@ export default function AdminDashboard() {
                 <p className="text-gray-400 text-sm mt-1">Las reservas aparecerán aquí cuando los maestros las creen</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-gray-400 text-xs uppercase tracking-wide border-b border-gray-100">
-                      <th className="pb-3 pr-4 text-left font-semibold">Maestro</th>
-                      <th className="pb-3 pr-4 text-left font-semibold">Recurso</th>
-                      <th className="pb-3 pr-4 text-left font-semibold">Fecha inicio</th>
-                      <th className="pb-3 text-left font-semibold">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {recientes.map(r => {
-                      const b = estadoBadge(r.estado, r.fecha_fin);
-                      return (
-                        <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="py-3 pr-4 font-medium text-gray-800">{r.maestro_nombre}</td>
-                          <td className="py-3 pr-4 text-gray-600">{r.recurso_nombre}</td>
-                          <td className="py-3 pr-4 text-gray-500 text-xs whitespace-nowrap">
-                            {format(new Date(r.fecha_inicio), 'dd MMM yyyy · HH:mm', { locale: es })}
-                          </td>
-                          <td className="py-3">
-                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${b.bg}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${b.dot}`} />
-                              {b.label}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {recientes.map(r => {
+                  const b = estadoBadge(r.estado, r.fecha_fin);
+                  const duracion = differenceInMinutes(new Date(r.fecha_fin), new Date(r.fecha_inicio));
+                  const fechaInicio = new Date(r.fecha_inicio);
+                  const fechaFin = new Date(r.fecha_fin);
+
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={() => handleClickReserva(r)}
+                      className="text-left p-4 bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 group"
+                    >
+                      {/* Header: Recurso + Estado */}
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors truncate">
+                            {r.recurso_nombre}
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-0.5">{r.maestro_nombre}</p>
+                        </div>
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${b.bg}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${b.dot}`} />
+                          {b.label}
+                        </span>
+                      </div>
+
+                      {/* Tipo badge */}
+                      <div className="mb-3 flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                          {r.recurso_tipo}
+                        </span>
+                      </div>
+
+                      {/* Info: Fecha, Hora, Duración */}
+                      <div className="space-y-2 mb-3 p-2.5 bg-white rounded-lg border border-gray-100">
+                        <div className="flex items-center gap-2 text-xs">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-gray-600 font-medium">
+                            {format(fechaInicio, 'dd MMM yyyy', { locale: es })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-gray-600 font-medium">
+                            {format(fechaInicio, 'HH:mm', { locale: es })} – {format(fechaFin, 'HH:mm', { locale: es })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span className="text-gray-600 font-medium">
+                            {duracion} min
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Usuario info */}
+                      <div className="pt-3 border-t border-gray-100">
+                        <p className="text-xs text-gray-500">
+                          <span className="font-medium text-gray-700">Usuario:</span> {r.usuario_nombre}
+                        </p>
+                      </div>
+
+                      {/* Hover hint */}
+                      <div className="mt-3 text-center">
+                        <p className="text-xs text-gray-400 group-hover:text-blue-600 transition-colors">
+                          Click para más detalles →
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )
           ) : (
