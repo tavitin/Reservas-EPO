@@ -216,19 +216,25 @@ export default function ReservasAdmin() {
       {/* ── Filtros ── */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
         {/* Chips de estado + controles */}
-        <div className="p-4 space-y-3">
-          {/* Fila 1: chips de estado */}
-          <div className="flex flex-wrap gap-1.5">
+        <div className="px-4 pt-4 pb-3 space-y-3">
+
+          {/* Fila 1: chips con scroll horizontal — nunca wrappean */}
+          <div
+            className="flex gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: 'none' }}
+          >
             {ESTADOS.map(([val, label]) => (
               <button key={val} onClick={() => setFiltro(val)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                   filtro === val
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                 }`}>
                 {label}
                 {val === 'todas' && (
-                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${filtro === val ? 'bg-white/30' : 'bg-gray-200 text-gray-500'}`}>
+                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
+                    filtro === val ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-500'
+                  }`}>
                     {reservas.length}
                   </span>
                 )}
@@ -236,12 +242,11 @@ export default function ReservasAdmin() {
             ))}
           </div>
 
-          {/* Fila 2: Filtros + Toggle vista */}
+          {/* Fila 2: Filtros (mobile) + Toggle vista */}
           <div className="flex items-center gap-2">
-            {/* Botón acordeón filtros — mobile */}
             <button
               onClick={() => setFiltrosOpen(v => !v)}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border transition-all md:hidden ${
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border transition-all md:hidden shrink-0 ${
                 filtrosOpen || hayFiltros
                   ? 'border-blue-300 bg-blue-50 text-blue-700'
                   : 'border-gray-200 text-gray-500 hover:border-gray-300'
@@ -251,10 +256,10 @@ export default function ReservasAdmin() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
               </svg>
-              Filtros {hayFiltros && <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+              Filtros
+              {hayFiltros && <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
             </button>
 
-            {/* Toggle vista — siempre visible, va a la derecha */}
             <div className="ml-auto flex gap-0.5 bg-gray-100 p-0.5 rounded-lg shrink-0">
               {[['tabla','Tabla'],['calendario','Cal.']].map(([v,lbl]) => (
                 <button key={v} onClick={() => setVista(v)}
