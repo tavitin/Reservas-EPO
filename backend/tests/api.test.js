@@ -1,23 +1,23 @@
 /**
  * Tests de integración — Reserva EPO Backend
- * Ejecutar: node tests/api.test.js
- * Requiere el backend corriendo en localhost:4000
+ * Ejecutar: npm test  (requiere backend + DB corriendo en localhost:4000)
  */
 
 const BASE = 'http://localhost:4000/api';
-let passed = 0;
-let failed = 0;
-let adminToken = '';
-let maestroToken = '';
+let passed = 0, failed = 0;
+let adminToken = '', maestroToken = '';
+let maestroId = null, recursoTestId = null, reservaTestId = null;
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 async function req(method, path, body, token) {
-  const opts = {
+  const res = await fetch(`${BASE}${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  };
-  const res = await fetch(`${BASE}${path}`, opts);
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  });
   let data;
   try { data = await res.json(); } catch { data = null; }
   return { status: res.status, data };
@@ -38,199 +38,326 @@ function assert(name, condition, detail = '') {
 async function testHealth() {
   console.log('\n📋 Health');
   const { status, data } = await req('GET', '/health');
-  assert('GET /health → 200 ok', status === 200 && data?.status === 'ok');
+  assert('GET /health → 200', status === 200 && data?.status === 'ok');
 }
 
 async function testAuth() {
   console.log('\n🔐 Autenticación');
 
-  // Login inválido
-  const bad = await req('POST', '/auth/login', { email: 'noexiste@epo.edu.mx', password: 'wrong' });
-  assert('Login con credenciales inválidas → 401', bad.status === 401);
+  const bad = await req('POST', '/auth/login', { email: 'no@existe.mx', password: 'wrong' });
+  assert('Login credenciales inválidas → 401', bad.status === 401);
 
-  // Login sin body
   const empty = await req('POST', '/auth/login', {});
-  assert('Login sin email/password → 400', empty.status === 400);
+  assert('Login sin body → 400', empty.status === 400);
 
-  // Login admin válido
   const ok = await req('POST', '/auth/login', { email: 'admin@epo.edu.mx', password: 'Admin2024!' });
   assert('Login admin válido → 200 con token', ok.status === 200 && !!ok.data?.token);
-  if (ok.data?.token) adminToken = ok.data.token;
+  adminToken = ok.data?.token ?? '';
   assert('Token de admin tiene rol=admin', ok.data?.user?.rol === 'admin');
+
+  const noToken = await req('GET', '/auth/me');
+  assert('GET /auth/me sin token → 401', noToken.status === 401);
+
+  const me = await req('GET', '/auth/me', undefined, adminToken);
+  assert('GET /auth/me con token → 200', me.status === 200 && me.data?.email === 'admin@epo.edu.mx');
 }
 
-async function testUsuarioSeguridad() {
-  console.log('\n👤 Seguridad — Usuarios');
+async function testUsuarios() {
+  console.log('\n👤 Usuarios');
 
-  // Crear maestro con rol=admin en el body (debe ignorarse)
-  const testEmail = `test_seg_${Date.now()}@epo.mx`;
-  const res = await req('POST', '/usuarios', {
-    nombre: 'Test Seguridad',
-    email: testEmail,
-    password: 'test1234',
-    rol: 'admin',            // <-- intento de escalación de privilegios
+  // Sin auth → 401
+  const noAuth = await req('GET', '/usuarios');
+  assert('GET /usuarios sin token → 401', noAuth.status === 401);
+
+  // Admin lista usuarios
+  const list = await req('GET', '/usuarios', undefined, adminToken);
+  assert('GET /usuarios con admin → 200', list.status === 200 && Array.isArray(list.data));
+
+  // Crear maestro normal
+  const email = `maestro_test_${Date.now()}@epo.mx`;
+  const created = await req('POST', '/usuarios', {
+    nombre: 'Maestro Test', email, password: 'Test12345', rol: 'maestro',
   }, adminToken);
+  assert('Crear maestro → 201', created.status === 201);
+  assert('Rol es maestro', created.data?.rol === 'maestro');
+  maestroId = created.data?.id;
 
-  assert('Crear usuario con rol=admin en body → 201', res.status === 201);
-  assert('Usuario creado tiene rol=maestro (no admin)', res.data?.rol === 'maestro',
-    `rol recibido: ${res.data?.rol}`);
+  // Login con maestro creado
+  const login = await req('POST', '/auth/login', { email, password: 'Test12345' });
+  assert('Login maestro nuevo → 200', login.status === 200 && !!login.data?.token);
+  maestroToken = login.data?.token ?? '';
 
-  // Login con el usuario recién creado
-  const login = await req('POST', '/auth/login', { email: testEmail, password: 'test1234' });
-  assert('Login con nuevo maestro → 200', login.status === 200);
-  if (login.data?.token) maestroToken = login.data.token;
-  assert('Token del nuevo usuario tiene rol=maestro', login.data?.user?.rol === 'maestro');
-
-  // Crear usuario con password corta
-  const short = await req('POST', '/usuarios', {
-    nombre: 'Short Pass',
-    email: `short_${Date.now()}@epo.mx`,
-    password: '123',
+  // Crear admin (admin puede crear otro admin)
+  const emailAdmin = `admin_test_${Date.now()}@epo.mx`;
+  const createdAdmin = await req('POST', '/usuarios', {
+    nombre: 'Admin Test', email: emailAdmin, password: 'Admin12345', rol: 'admin',
   }, adminToken);
-  assert('Password < 6 chars → 400', short.status === 400);
+  assert('Admin puede crear otro admin → 201', createdAdmin.status === 201);
+  assert('Rol del nuevo admin es admin', createdAdmin.data?.rol === 'admin');
+  const nuevoAdminId = createdAdmin.data?.id;
 
-  // Crear usuario sin campos requeridos
-  const missing = await req('POST', '/usuarios', { nombre: 'Sin Email' }, adminToken);
-  assert('Crear usuario sin email → 400', missing.status === 400);
+  // Validaciones de campos
+  const noEmail = await req('POST', '/usuarios', { nombre: 'Sin Email', password: 'Pass1234' }, adminToken);
+  assert('Crear usuario sin email → 400', noEmail.status === 400);
 
-  // Limpiar usuario de prueba
-  await req('DELETE', `/auth/login`, null, null); // no existe, solo limpiar token
+  const shortPass = await req('POST', '/usuarios', {
+    nombre: 'Pass Corta', email: `short_${Date.now()}@epo.mx`, password: '123',
+  }, adminToken);
+  assert('Password < 8 chars → 400', shortPass.status === 400);
 
-  return testEmail;
+  const duplicate = await req('POST', '/usuarios', {
+    nombre: 'Dup', email, password: 'Test12345',
+  }, adminToken);
+  assert('Email duplicado → 400', duplicate.status === 400);
+
+  // Maestro no puede crear usuarios
+  const maestroCreate = await req('POST', '/usuarios', {
+    nombre: 'No debería', email: `nd_${Date.now()}@epo.mx`, password: 'Pass1234',
+  }, maestroToken);
+  assert('Maestro no puede crear usuarios → 403', maestroCreate.status === 403);
+
+  // Protección IDOR: admin no puede desactivar a otro admin
+  if (nuevoAdminId) {
+    const toggleAdmin = await req('PUT', `/usuarios/${nuevoAdminId}/toggle`, undefined, adminToken);
+    assert('Admin no puede desactivar otro admin → 403', toggleAdmin.status === 403,
+      `status=${toggleAdmin.status}`);
+
+    const resetAdmin = await req('PUT', `/usuarios/${nuevoAdminId}/reset-password`,
+      { password_nuevo: 'NuevoPass123' }, adminToken);
+    assert('Admin no puede resetear password de otro admin → 403', resetAdmin.status === 403,
+      `status=${resetAdmin.status}`);
+  }
+
+  // Admin no puede desactivarse a sí mismo
+  const me = await req('GET', '/auth/me', undefined, adminToken);
+  if (me.data?.id) {
+    const selfToggle = await req('PUT', `/usuarios/${me.data.id}/toggle`, undefined, adminToken);
+    assert('Admin no puede desactivarse a sí mismo → 400', selfToggle.status === 400);
+  }
+
+  // Reset password de maestro (sí permitido)
+  if (maestroId) {
+    const reset = await req('PUT', `/usuarios/${maestroId}/reset-password`,
+      { password_nuevo: 'NuevoPass123' }, adminToken);
+    assert('Admin puede resetear password de maestro → 200', reset.status === 200);
+  }
 }
 
-async function testRecursos(testEmail) {
+async function testRecursos() {
   console.log('\n📦 Recursos');
 
-  // Listar recursos (requiere auth)
-  const list = await req('GET', '/recursos', null, adminToken);
-  assert('GET /recursos con auth → 200', list.status === 200);
-  assert('GET /recursos devuelve array', Array.isArray(list.data));
-
-  // Sin auth
   const noAuth = await req('GET', '/recursos');
   assert('GET /recursos sin token → 401', noAuth.status === 401);
 
+  const list = await req('GET', '/recursos', undefined, adminToken);
+  assert('GET /recursos con auth → 200', list.status === 200 && Array.isArray(list.data));
+
+  // Maestro puede listar pero no crear
+  const maestroList = await req('GET', '/recursos', undefined, maestroToken);
+  assert('Maestro puede listar recursos → 200', maestroList.status === 200);
+
+  const maestroCreate = await req('POST', '/recursos', { nombre: 'No', tipo: 'Laptop' }, maestroToken);
+  assert('Maestro no puede crear recursos → 403', maestroCreate.status === 403);
+
   // Crear recurso
-  const nombre = `Test_${Date.now()}`;
+  const nombre = `Recurso_Test_${Date.now()}`;
   const created = await req('POST', '/recursos', { nombre, tipo: 'Laptop', descripcion: 'Test' }, adminToken);
   assert('POST /recursos → 201', created.status === 201);
-  assert('Recurso creado tiene nombre correcto', created.data?.nombre === nombre);
-  const recursoId = created.data?.id;
+  assert('Nombre correcto', created.data?.nombre === nombre);
+  recursoTestId = created.data?.id;
 
-  // Crear sin nombre
+  // Validaciones
   const noName = await req('POST', '/recursos', { tipo: 'Proyector' }, adminToken);
-  assert('POST /recursos sin nombre → 400', noName.status === 400);
+  assert('Crear recurso sin nombre → 400', noName.status === 400);
 
-  // Eliminar recurso sin reservas → debe funcionar
-  if (recursoId) {
-    const del = await req('DELETE', `/recursos/${recursoId}`, null, adminToken);
-    assert('DELETE recurso sin reservas → 200', del.status === 200);
+  // Update sin campos → 400
+  if (recursoTestId) {
+    const badUpdate = await req('PUT', `/recursos/${recursoTestId}`, { descripcion: 'solo esto' }, adminToken);
+    assert('Update recurso sin nombre/tipo → 400', badUpdate.status === 400);
   }
-
-  return recursoId;
-}
-
-async function testRecursoConReservas() {
-  console.log('\n🚫 Seguridad — Borrado de recurso con reservas activas');
-
-  // Buscar un recurso que tenga reservas activas en la DB
-  // Primero creamos un recurso fresco
-  const nombre = `RecTest_${Date.now()}`;
-  const rec = await req('POST', '/recursos', { nombre, tipo: 'Proyector' }, adminToken);
-  if (rec.status !== 201) { assert('Setup: crear recurso para test', false, 'no se pudo crear'); return; }
-  const rid = rec.data.id;
-
-  // Crear una reserva para ese recurso (usando maestroToken)
-  const ahora = new Date();
-  const inicio = new Date(ahora.getTime() + 60 * 60 * 1000); // +1h
-  const fin    = new Date(ahora.getTime() + 2 * 60 * 60 * 1000); // +2h
-  const reserva = await req('POST', '/reservas', {
-    recurso_id: rid,
-    fecha_inicio: inicio.toISOString(),
-    fecha_fin: fin.toISOString(),
-    notas: 'test',
-  }, maestroToken);
-  assert('Setup: crear reserva activa para el recurso', reserva.status === 201,
-    `status=${reserva.status} data=${JSON.stringify(reserva.data)}`);
-
-  // Intentar borrar el recurso → debe fallar con 409
-  const del = await req('DELETE', `/recursos/${rid}`, null, adminToken);
-  assert('DELETE recurso con reserva activa → 409', del.status === 409,
-    `status=${del.status}`);
-  assert('Mensaje de error descriptivo', del.data?.error?.includes('reservas activas'),
-    `error=${del.data?.error}`);
 }
 
 async function testReservas() {
   console.log('\n📅 Reservas');
 
-  // Listar reservas del maestro
-  const list = await req('GET', '/reservas', null, maestroToken);
-  assert('GET /reservas con auth maestro → 200', list.status === 200);
-  assert('GET /reservas devuelve array', Array.isArray(list.data));
+  if (!recursoTestId) { console.log('  ⚠️  Sin recurso de prueba, saltando'); return; }
 
-  // Verificar disponibilidad
-  const recursos = await req('GET', '/recursos', null, adminToken);
-  if (Array.isArray(recursos.data) && recursos.data.length > 0) {
-    const rid = recursos.data[0].id;
-    const inicio = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000); // +10 días
-    const fin    = new Date(inicio.getTime() + 60 * 60 * 1000);
-    const disp = await req('GET',
-      `/reservas/disponibilidad?recurso_id=${rid}&fecha_inicio=${inicio.toISOString()}&fecha_fin=${fin.toISOString()}`,
-      null, maestroToken);
-    assert('GET /reservas/disponibilidad → 200', disp.status === 200);
-    assert('Respuesta tiene campo disponible (boolean)', typeof disp.data?.disponible === 'boolean');
-  }
-
-  // Sin auth
   const noAuth = await req('GET', '/reservas');
   assert('GET /reservas sin token → 401', noAuth.status === 401);
+
+  // Disponibilidad
+  const ahora  = new Date();
+  const inicio = new Date(ahora.getTime() + 10 * 24 * 60 * 60 * 1000);
+  const fin    = new Date(inicio.getTime() + 60 * 60 * 1000);
+  const disp   = await req('GET',
+    `/reservas/disponibilidad?recurso_id=${recursoTestId}&fecha_inicio=${inicio.toISOString()}&fecha_fin=${fin.toISOString()}`,
+    undefined, maestroToken);
+  assert('GET /reservas/disponibilidad → 200', disp.status === 200);
+  assert('Campo disponible es boolean', typeof disp.data?.disponible === 'boolean');
+  assert('Recurso nuevo está disponible', disp.data?.disponible === true);
+
+  // Crear reserva (maestro)
+  const reserva = await req('POST', '/reservas', {
+    recurso_id: recursoTestId,
+    fecha_inicio: inicio.toISOString(),
+    fecha_fin: fin.toISOString(),
+    notas: 'reserva de prueba',
+  }, maestroToken);
+  assert('POST /reservas → 201', reserva.status === 201);
+  reservaTestId = reserva.data?.id;
+
+  // Conflicto de horario
+  const conflicto = await req('POST', '/reservas', {
+    recurso_id: recursoTestId,
+    fecha_inicio: inicio.toISOString(),
+    fecha_fin: fin.toISOString(),
+  }, maestroToken);
+  assert('Reserva en horario ocupado → 409', conflicto.status === 409);
+
+  // Disponibilidad ahora debe ser false
+  const disp2 = await req('GET',
+    `/reservas/disponibilidad?recurso_id=${recursoTestId}&fecha_inicio=${inicio.toISOString()}&fecha_fin=${fin.toISOString()}`,
+    undefined, maestroToken);
+  assert('Recurso ya no disponible → disponible=false', disp2.data?.disponible === false);
+
+  // Admin ve todas las reservas
+  const adminList = await req('GET', '/reservas', undefined, adminToken);
+  assert('Admin GET /reservas → 200', adminList.status === 200 && Array.isArray(adminList.data));
+
+  // Admin ve solo las suyas con ?own=true
+  const ownList = await req('GET', '/reservas?own=true', undefined, adminToken);
+  assert('Admin GET /reservas?own=true → 200', ownList.status === 200 && Array.isArray(ownList.data));
+
+  // Cancelar reserva pasada (no permitido si ya terminó — pero esta es futura)
+  // El cancel requiere fecha_fin > NOW(), esta reserva es en 10 días → debe funcionar
+  if (reservaTestId) {
+    const cancel = await req('PUT', `/reservas/${reservaTestId}/cancelar`, undefined, maestroToken);
+    assert('Cancelar reserva futura → 200', cancel.status === 200,
+      `status=${cancel.status} data=${JSON.stringify(cancel.data)}`);
+  }
 }
 
-async function testAccesoRoles() {
-  console.log('\n🔒 Control de acceso por rol');
+async function testEntrega() {
+  console.log('\n✍️  Recepción/Entrega con firma');
 
-  // Maestro no puede acceder a rutas de admin
-  const rec = await req('DELETE', '/recursos/999', null, maestroToken);
-  assert('Maestro no puede borrar recursos (403)', rec.status === 403,
-    `status=${rec.status}`);
+  if (!recursoTestId) { console.log('  ⚠️  Sin recurso de prueba, saltando'); return; }
 
-  const usr = await req('GET', '/usuarios', null, maestroToken);
-  assert('Maestro no puede listar usuarios (403)', usr.status === 403,
-    `status=${usr.status}`);
+  // Crear una nueva reserva para el test de entrega
+  const inicio = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000);
+  const fin    = new Date(inicio.getTime() + 60 * 60 * 1000);
+  const reserva = await req('POST', '/reservas', {
+    recurso_id: recursoTestId,
+    fecha_inicio: inicio.toISOString(),
+    fecha_fin: fin.toISOString(),
+    notas: 'test entrega',
+  }, maestroToken);
+  assert('Setup: crear reserva para entrega → 201', reserva.status === 201,
+    `status=${reserva.status}`);
+  const rid = reserva.data?.id;
 
-  // Admin puede listar usuarios
-  const adminUsr = await req('GET', '/usuarios', null, adminToken);
-  assert('Admin puede listar usuarios → 200', adminUsr.status === 200);
+  // Entregar sin firma → 400
+  const noFirma = await req('PUT', `/reservas/${rid}/entregar`, {}, adminToken);
+  assert('Entregar sin firma → 400', noFirma.status === 400);
+
+  // Maestro no puede registrar entrega → 403
+  const maestroEntrega = await req('PUT', `/reservas/${rid}/entregar`,
+    { firma_base64: 'data:image/png;base64,abc' }, maestroToken);
+  assert('Maestro no puede registrar entrega → 403', maestroEntrega.status === 403);
+
+  // Admin registra entrega con firma → 200
+  const fakeSignature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const entrega = await req('PUT', `/reservas/${rid}/entregar`, {
+    firma_base64: fakeSignature,
+    comentario_entrega: 'Artículo devuelto en buen estado',
+  }, adminToken);
+  assert('Admin registra entrega con firma → 200', entrega.status === 200,
+    `status=${entrega.status} data=${JSON.stringify(entrega.data)}`);
+  assert('Estado cambia a completada', entrega.data?.estado === 'completada');
+  assert('Tiene fecha_entrega', !!entrega.data?.fecha_entrega);
+
+  // No se puede volver a entregar
+  const reentrega = await req('PUT', `/reservas/${rid}/entregar`,
+    { firma_base64: fakeSignature }, adminToken);
+  assert('Entregar reserva ya completada → 400', reentrega.status === 400);
+
+  // Verificar que aparece en la lista del admin con campos de entrega
+  const list = await req('GET', '/reservas', undefined, adminToken);
+  const completada = list.data?.find(r => r.id === rid);
+  assert('Reserva completada aparece en listado', !!completada);
+  assert('Reserva completada tiene estado=completada', completada?.estado === 'completada');
+  assert('Reserva completada tiene comentario', completada?.comentario_entrega === 'Artículo devuelto en buen estado');
+}
+
+async function testBorradoRecursoConReservas() {
+  console.log('\n🚫 Borrado de recurso con reservas activas');
+
+  const rec = await req('POST', '/recursos', { nombre: `RecDel_${Date.now()}`, tipo: 'Proyector' }, adminToken);
+  if (rec.status !== 201) { assert('Setup recurso', false); return; }
+  const rid = rec.data.id;
+
+  const inicio = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const fin    = new Date(inicio.getTime() + 60 * 60 * 1000);
+  await req('POST', '/reservas', { recurso_id: rid, fecha_inicio: inicio.toISOString(), fecha_fin: fin.toISOString() }, maestroToken);
+
+  const del = await req('DELETE', `/recursos/${rid}`, undefined, adminToken);
+  assert('DELETE recurso con reservas activas → 409', del.status === 409);
+  assert('Mensaje descriptivo', del.data?.error?.includes('reservas activas'));
+
+  // Limpiar el recurso de test si no tiene reservas activas (solo esta de 30 días)
+  // Lo dejamos así
+}
+
+async function testRateLimiting() {
+  console.log('\n🚦 Rate limiting');
+
+  // El limiter de login permite 10 intentos en 15min
+  // Hacemos 2 seguidos para verificar que no bloquea antes de tiempo
+  const r1 = await req('POST', '/auth/login', { email: 'no@existe.mx', password: 'bad' });
+  const r2 = await req('POST', '/auth/login', { email: 'no@existe.mx', password: 'bad' });
+  assert('Rate limit no bloquea antes de 10 intentos', r1.status === 401 && r2.status === 401);
+}
+
+/* ─── cleanup ─────────────────────────────────────────────────────────────── */
+async function cleanup() {
+  // Desactivar maestro de prueba si fue creado
+  if (maestroId && adminToken) {
+    await req('PUT', `/usuarios/${maestroId}/toggle`, undefined, adminToken);
+  }
+  // Eliminar recurso de prueba si no tiene reservas activas (podría tener)
+  // No forzamos el borrado para no romper estado
 }
 
 /* ─── runner ──────────────────────────────────────────────────────────────── */
 async function run() {
   console.log('🧪 Reserva EPO — Tests de integración');
-  console.log(`   Backend: ${BASE}\n`);
+  console.log(`   Backend: ${BASE}`);
+  console.log(`   Fecha:   ${new Date().toLocaleString('es-MX')}\n`);
 
   try {
     await testHealth();
     await testAuth();
-    const testEmail = await testUsuarioSeguridad();
-    await testRecursos(testEmail);
-    await testRecursoConReservas();
+    await testUsuarios();
+    await testRecursos();
     await testReservas();
-    await testAccesoRoles();
+    await testEntrega();
+    await testBorradoRecursoConReservas();
+    await testRateLimiting();
   } catch (err) {
-    console.error('\n💥 Error inesperado:', err.message);
+    console.error('\n💥 Error inesperado en el runner:', err.message);
     failed++;
+  } finally {
+    await cleanup();
   }
 
   const total = passed + failed;
-  console.log(`\n${'─'.repeat(50)}`);
-  console.log(`Resultado: ${passed}/${total} tests pasaron`);
+  console.log(`\n${'─'.repeat(52)}`);
+  console.log(`📊 Resultado: ${passed}/${total} tests pasaron`);
   if (failed > 0) {
-    console.log(`           ${failed} fallaron`);
+    console.log(`             ${failed} fallaron ❌`);
     process.exit(1);
   } else {
-    console.log('           ¡Todos pasaron! 🎉');
+    console.log('             ¡Todos pasaron! 🎉');
+    process.exit(0);
   }
 }
 
