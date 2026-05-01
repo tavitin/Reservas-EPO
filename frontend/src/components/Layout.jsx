@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SessionTimer from './SessionTimer';
 
 /* ── helpers ── */
 function getInitials(name = '') {
@@ -334,6 +335,9 @@ export default function Layout() {
       <footer className="text-center text-xs text-gray-400 py-3 border-t border-gray-200 bg-white">
         © EPO 2026 — Sistema de Reservas
       </footer>
+
+      {/* Session Timer Widget */}
+      <SessionTimer />
     </div>
   );
 }
