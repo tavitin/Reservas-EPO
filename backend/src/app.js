@@ -38,7 +38,28 @@ if (process.env.NODE_ENV === 'production' && (!process.env.CORS_ORIGIN || proces
 // Confiar en el proxy de Railway (necesario para que express-rate-limit identifique IPs correctamente)
 app.set('trust proxy', 1);
 
-app.use(helmet());
+// ── Configuración mejorada de Helmet ────────────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      fontSrc: ["'self'", 'data:'],
+      connectSrc: ["'self'", process.env.CORS_ORIGIN || 'http://localhost:3000'],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+    },
+  },
+  frameguard: { action: 'deny' },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  hsts: process.env.NODE_ENV === 'production'
+    ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+    : undefined,
+}));
 app.use(cors({
   origin     : process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true,   // necesario para que el navegador envíe/reciba cookies
