@@ -74,10 +74,10 @@
 
 ### Prioridad Alta — Seguridad / Integridad
 
-| # | Tarea | Motivo |
-|---|-------|--------|
-| P1 | **Helmet.js** — agregar cabeceras HTTP de seguridad | Sin `X-Frame-Options`, `Content-Security-Policy`, `X-XSS-Protection` el app es vulnerable a ataques de framing y XSS. 1 línea: `app.use(helmet())` |
-| P2 | **Rate limiting en `/auth/login`** | Actualmente cualquiera puede hacer fuerza bruta al login. Instalar `express-rate-limit` con límite de 10 intentos / 15 min por IP |
+| # | Tarea | Motivo | Estado |
+|---|-------|--------|--------|
+| ✅ P1 | **Helmet.js** — cabeceras HTTP de seguridad | CSP robusta, frame security, HSTS, XSS protection | `6cdf34f` |
+| P2 | **Rate limiting en `/auth/login`** | ✅ YA IMPLEMENTADO — 10 intentos / 15 min por IP | Completado |
 | P3 | **Forzar cambio de contraseña en primer login** | Los usuarios creados por admin usan contraseña temporal. No hay mecanismo que los obligue a cambiarla al entrar por primera vez |
 | P4 | **Endpoint `POST /auth/logout`** — registrar en audit log | El logout no genera entrada de auditoría, quedando invisible en los logs |
 
@@ -107,8 +107,8 @@
 ## 📊 Resumen
 
 ```
-Completadas : 37 tareas
-Pendientes  : 15 tareas  (4 alta · 5 media · 6 baja)
+Completadas : 38 tareas
+Pendientes  : 13 tareas  (2 alta · 5 media · 6 baja)
 ```
 
 ---
