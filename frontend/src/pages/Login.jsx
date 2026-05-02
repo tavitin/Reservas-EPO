@@ -57,7 +57,7 @@ export default function Login() {
             </div>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900">Sistema de Reservas</h1>
-          <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-1.5">EPO — Ingresa con tu cuenta institucional</p>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-1.5">Plataforma de gestión de recursos escolares</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
